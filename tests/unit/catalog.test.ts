@@ -6,6 +6,7 @@ import { SKILL_DEPENDENCIES } from "../../src/catalog/dependencies.js";
 import { canonicalPreset, presetRoots } from "../../src/catalog/presets.js";
 import { loadUpstreamCatalog } from "../../src/catalog/upstream.js";
 import { resolveSkillSet } from "../../src/core/dependency-graph.js";
+import { skillSelectionCatalog } from "../../src/core/service.js";
 
 describe("upstream catalog and presets", () => {
   it("validates the pinned snapshot and resolves every preset", async () => {
@@ -27,5 +28,19 @@ describe("upstream catalog and presets", () => {
     assert.equal(presetRoots("full", catalog).length, 25);
     assert.equal(presetRoots("beta-only", catalog).length, 8);
     assert.equal(presetRoots("everything", catalog).length, 37);
+  });
+
+  it("exposes descriptions and derives preset relationships", async () => {
+    const skills = await skillSelectionCatalog(fileURLToPath(new URL("../../../", import.meta.url)));
+    assert.equal(skills.length, 37);
+    assert.equal(skills.every((skill) => skill.description.length > 0), true);
+
+    const grilling = skills.find((skill) => skill.name === "grilling");
+    assert.equal(grilling?.relations.find((item) => item.preset === "default")?.relation, "dependency");
+    assert.equal(grilling?.relations.find((item) => item.preset === "full")?.relation, "root");
+
+    const teach = skills.find((skill) => skill.name === "teach");
+    assert.equal(teach?.relations.find((item) => item.preset === "default")?.relation, "none");
+    assert.equal(teach?.relations.find((item) => item.preset === "everything")?.relation, "root");
   });
 });

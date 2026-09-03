@@ -76,14 +76,56 @@ describe("CLI", () => {
       assert.equal(initialized.code, 0);
       const config = JSON.parse(await readFile(path.join(root, ".mattpack", "config.json"), "utf8")) as {
         preset?: unknown;
+        additionalSkills?: unknown;
         harnesses?: unknown;
       };
       assert.equal(config.preset, "default");
+      assert.deepEqual(config.additionalSkills, []);
       assert.deepEqual(config.harnesses, ["claude", "codex"]);
+
+      const codebuddy = await run(["init", "general", "--dir", root, "--tools", "codebuddy", "--dry-run", "--json"]);
+      assert.equal(codebuddy.code, 0);
+      assert.match(codebuddy.stdout, /\.codebuddy\/skills/u);
 
       const oldFlag = await run(["init", "default", "--dir", root, "--harness", "codex", "--dry-run", "--json"]);
       assert.equal(oldFlag.code, 2);
       assert.match(oldFlag.stdout, /INVALID_ARGUMENT/u);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("adds explicit skills and preserves them as config intent", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "mattpack-cli-skills-"));
+    try {
+      const initialized = await run([
+        "init", "general", "--dir", root, "--tools", "codex", "--skills", "teach", "--yes", "--json"
+      ]);
+      assert.equal(initialized.code, 0);
+      await access(path.join(root, ".agents", "skills", "teach", "SKILL.md"));
+
+      const appended = await run(["init", "--dir", root, "--skills", "research", "--yes", "--json"]);
+      assert.equal(appended.code, 0);
+      const configFile = path.join(root, ".mattpack", "config.json");
+      const config = JSON.parse(await readFile(configFile, "utf8")) as { additionalSkills?: unknown };
+      assert.deepEqual(config.additionalSkills, ["research", "teach"]);
+
+      const inspected = await run(["inspect", "--dir", root, "--skills", "wizard", "--json"]);
+      assert.equal(inspected.code, 0);
+      assert.deepEqual(
+        (JSON.parse(await readFile(configFile, "utf8")) as { additionalSkills?: unknown }).additionalSkills,
+        ["research", "teach"]
+      );
+
+      const unsupported = await run(["update", "--dir", root, "--skills", "wizard", "--json"]);
+      assert.equal(unsupported.code, 2);
+      assert.match(unsupported.stdout, /INVALID_ARGUMENT/u);
+
+      const unknown = await run([
+        "init", "--dir", root, "--tools", "codex", "--skills", "does-not-exist", "--dry-run", "--json"
+      ]);
+      assert.equal(unknown.code, 1);
+      assert.match(unknown.stdout, /UNKNOWN_SKILL/u);
     } finally {
       await rm(root, { recursive: true, force: true });
     }

@@ -7,7 +7,7 @@ Defines project-local harness selection, detection, destinations, and shared-roo
 ## Requirements
 
 ### Requirement: Supported project-local harnesses
-Mattpack SHALL support `agents`, `codex`, `zed`, `claude`, `opencode`, `pi`, `oh-my-pi`, `gemini`, `cursor`, `github-copilot`, `kimi`, `qwen`, and `kilocode` at their exact AGENTS.md destinations.
+Mattpack SHALL support every canonical tool in the pinned OpenSpec reference that has a verified project-local skill directory, at the exact destination recorded in the harness registry. Global-only targets and compatibility aliases SHALL remain unsupported.
 
 #### Scenario: Explicit harness selection
 - **WHEN** one or more harness IDs are supplied through `--tools`
@@ -17,8 +17,12 @@ Mattpack SHALL support `agents`, `codex`, `zed`, `claude`, `opencode`, `pi`, `oh
 - **WHEN** `--tools all` is supplied
 - **THEN** all supported logical harnesses are selected
 
+#### Scenario: OpenSpec tool has only a global target
+- **WHEN** the pinned reference defines a tool such as `minimax-code` with only a home-directory skill target
+- **THEN** Mattpack excludes it from the project-local harness registry
+
 ### Requirement: Shared physical target deduplication
-Mattpack SHALL treat `agents`, `codex`, and `zed` as separate logical consumers of one `.agents/skills` physical tree.
+Mattpack SHALL treat `agents`, `antigravity`, `codex`, and `zed` as separate logical consumers of one `.agents/skills` physical tree.
 
 #### Scenario: Shared consumers are selected together
 - **WHEN** two or more shared-root harnesses are selected

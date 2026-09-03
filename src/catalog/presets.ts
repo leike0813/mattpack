@@ -3,6 +3,13 @@ import type { UpstreamCatalog } from "./upstream.js";
 
 export const CANONICAL_PRESETS = ["default", "general", "full", "beta-only", "everything"] as const;
 export type CanonicalPreset = (typeof CANONICAL_PRESETS)[number];
+export type PresetRelation = "root" | "dependency" | "none";
+
+export interface SkillCatalogEntry {
+  name: string;
+  description: string;
+  relations: readonly { preset: CanonicalPreset; relation: PresetRelation }[];
+}
 
 export interface PresetDefinition {
   name: CanonicalPreset;

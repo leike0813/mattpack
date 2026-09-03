@@ -6,7 +6,13 @@ import type { ConfigState, ExistingSkill, LockState, ManagedSkill } from "../../
 
 const OLD = "a".repeat(64);
 const NEW = "b".repeat(64);
-const config: ConfigState = { schemaVersion: 1, preset: "general", harnesses: ["codex"], includeDependencies: true };
+const config: ConfigState = {
+  schemaVersion: 1,
+  preset: "general",
+  additionalSkills: [],
+  harnesses: ["codex"],
+  includeDependencies: true
+};
 const managed: ManagedSkill = {
   root: ".agents/skills",
   name: "demo",

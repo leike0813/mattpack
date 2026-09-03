@@ -14,6 +14,8 @@ import {
   installProject,
   listCatalog,
   removeProject,
+  selectAdditionalSkills,
+  skillSelectionCatalog,
   updateProject
 } from "./core/service.js";
 import { readConfig, readPackageVersion } from "./core/state.js";
@@ -43,6 +45,7 @@ Usage:
 Options:
   --dir <path>       Project directory
   --tools <ids>      Comma-separated tool ids; use "all" for every tool
+  --skills <ids>     Comma-separated skill ids to add to the preset
   --yes              Use defaults and approve writes without prompting
   --dry-run          Return the real plan without applying it
   --json             Write one JSON value to stdout
@@ -59,6 +62,7 @@ interface Parsed {
   values: {
     dir?: string;
     tools?: string;
+    skills?: string;
     yes?: boolean;
     "dry-run"?: boolean;
     json?: boolean;
@@ -80,6 +84,7 @@ function parse(argv: readonly string[]): Parsed {
       options: {
         dir: { type: "string" },
         tools: { type: "string" },
+        skills: { type: "string" },
         yes: { type: "boolean" },
         "dry-run": { type: "boolean" },
         json: { type: "boolean" },
@@ -111,19 +116,19 @@ function parse(argv: readonly string[]): Parsed {
   const values = parsed.values;
   const invalidOptions: string[] = [];
   if (command === "list") {
-    for (const key of ["dir", "tools", "yes", "dry-run", "force", "no-deps"] as const) {
+    for (const key of ["dir", "tools", "skills", "yes", "dry-run", "force", "no-deps"] as const) {
       if (values[key] !== undefined) invalidOptions.push(`--${key}`);
     }
   } else if (command === "doctor") {
-    for (const key of ["tools", "yes", "dry-run", "force", "no-deps"] as const) {
+    for (const key of ["tools", "skills", "yes", "dry-run", "force", "no-deps"] as const) {
       if (values[key] !== undefined) invalidOptions.push(`--${key}`);
     }
   } else if (command === "remove") {
-    for (const key of ["tools", "force", "no-deps"] as const) {
+    for (const key of ["tools", "skills", "force", "no-deps"] as const) {
       if (values[key] !== undefined) invalidOptions.push(`--${key}`);
     }
   } else if (command === "update") {
-    for (const key of ["tools", "no-deps"] as const) {
+    for (const key of ["tools", "skills", "no-deps"] as const) {
       if (values[key] !== undefined) invalidOptions.push(`--${key}`);
     }
   }
@@ -133,23 +138,32 @@ function parse(argv: readonly string[]): Parsed {
   return result;
 }
 
-function parseTools(value: string): string[] {
-  const tools = value.split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
-  if (tools.length === 0) throw new MattpackError("INVALID_ARGUMENT", "--tools requires at least one tool id");
-  return tools;
+function parseIds(value: string, option: "tools" | "skills"): string[] {
+  const ids = value.split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
+  if (ids.length === 0) throw new MattpackError("INVALID_ARGUMENT", `--${option} requires at least one id`);
+  return ids;
 }
 
-async function promptChoices(projectRoot: string, parsed: Parsed, persisted?: Awaited<ReturnType<typeof readConfig>>): Promise<{
+async function promptChoices(
+  projectRoot: string,
+  packageRoot: string,
+  parsed: Parsed,
+  persisted?: Awaited<ReturnType<typeof readConfig>>
+): Promise<{
   preset: CanonicalPreset;
+  additionalSkills: readonly string[];
   harnesses: readonly string[];
 }> {
   const explicitTools = parsed.values.tools !== undefined;
   let preset = parsed.preset ? canonicalPreset(parsed.preset) : explicitTools ? "default" : persisted?.preset;
-  let harnesses = explicitTools ? parseTools(parsed.values.tools ?? "") : persisted?.harnesses;
+  let harnesses = explicitTools ? parseIds(parsed.values.tools ?? "", "tools") : persisted?.harnesses;
+  let additionalSkills = [...new Set([
+    ...(persisted?.additionalSkills ?? []),
+    ...(parsed.values.skills === undefined ? [] : parseIds(parsed.values.skills, "skills"))
+  ])].sort();
   const canPrompt = !parsed.values.json && !parsed.values.yes && isInteractive();
   if (!canPrompt && !preset) preset = "default";
 
-  const promptPreset = !parsed.preset;
   const promptHarness = !explicitTools;
   const promptMissing = parsed.command === "init" || !preset || !harnesses?.length;
   if (canPrompt && promptMissing && promptHarness) {
@@ -169,13 +183,21 @@ async function promptChoices(projectRoot: string, parsed: Parsed, persisted?: Aw
         configured: configured.has(harness.id)
       }));
     }
+    const skillOptions = await skillSelectionCatalog(packageRoot);
+    additionalSkills = selectAdditionalSkills(
+      additionalSkills,
+      new Set(skillOptions.map((skill) => skill.name))
+    );
     const selected = await selectPresetAndHarnesses(
       CANONICAL_PRESETS.map((name) => PRESETS[name]),
       preset ?? "default",
       harnessOptions ?? [],
-      promptPreset
+      skillOptions,
+      additionalSkills,
+      Boolean(parsed.preset)
     );
     preset = selected.preset;
+    additionalSkills = [...selected.additionalSkills];
     harnesses = selected.harnesses;
   }
   if (!preset || !harnesses?.length) {
@@ -184,7 +206,11 @@ async function promptChoices(projectRoot: string, parsed: Parsed, persisted?: Aw
       "Tool selection is required; pass --tools all or a comma-separated list of tool ids"
     );
   }
-  return { preset, harnesses: selectHarnesses(harnesses).map((item) => item.id) };
+  return {
+    preset,
+    additionalSkills,
+    harnesses: selectHarnesses(harnesses).map((item) => item.id)
+  };
 }
 
 function planChanges(result: Awaited<ReturnType<typeof installProject>>): boolean {
@@ -239,7 +265,7 @@ async function main(argv = process.argv.slice(2)): Promise<number> {
   const projectRoot = await resolveProjectRoot({ ...(parsed.values.dir ? { dir: parsed.values.dir } : {}) });
   if (parsed.command === "init" || parsed.command === "inspect") {
     const persisted = await readConfig(projectRoot, true);
-    const choices = await promptChoices(projectRoot, parsed, persisted);
+    const choices = await promptChoices(projectRoot, packageRoot, parsed, persisted);
     const dryRun = parsed.command === "inspect" || Boolean(parsed.values["dry-run"]);
     const includeDependencies = parsed.values["no-deps"] ? false : (persisted?.includeDependencies ?? true);
     const result = await installProject({
@@ -247,6 +273,7 @@ async function main(argv = process.argv.slice(2)): Promise<number> {
       projectRoot,
       packageRoot,
       preset: choices.preset,
+      additionalSkills: choices.additionalSkills,
       harnesses: choices.harnesses,
       includeDependencies,
       dryRun: true,
@@ -291,7 +318,7 @@ try {
     if (wantsJson) process.stdout.write(errorJson(normalized));
     else {
       process.stderr.write(`Error [${normalized.code}]: ${normalized.message}\n`);
-      if (["INVALID_ARGUMENT", "UNKNOWN_PRESET", "UNKNOWN_TOOL"].includes(normalized.code)) {
+      if (["INVALID_ARGUMENT", "UNKNOWN_PRESET", "UNKNOWN_SKILL", "UNKNOWN_TOOL"].includes(normalized.code)) {
         process.stderr.write('Run "mattpack --help" for usage.\n');
       }
     }

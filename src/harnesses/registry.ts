@@ -14,14 +14,24 @@ interface HarnessDefinition {
 
 const DEFINITIONS: readonly HarnessDefinition[] = [
   { id: "agents", displayName: "Shared .agents skills", root: ".agents/skills", detectionPaths: [".agents/skills"] },
-  { id: "codex", displayName: "Codex", root: ".agents/skills", detectionPaths: [".agents/skills", ".codex/skills"] },
-  { id: "zed", displayName: "Zed Agent", root: ".agents/skills", detectionPaths: [".zed", ".agents/skills"] },
+  { id: "amazon-q", displayName: "Amazon Q Developer", root: ".amazonq/skills", detectionPaths: [".amazonq"] },
+  { id: "antigravity", displayName: "Antigravity", root: ".agents/skills", detectionPaths: [".agent", ".agents/workflows"] },
+  { id: "auggie", displayName: "Auggie (Augment CLI)", root: ".augment/skills", detectionPaths: [".augment"] },
+  { id: "bob", displayName: "Bob Shell", root: ".bob/skills", detectionPaths: [".bob"] },
   { id: "claude", displayName: "Claude Code", root: ".claude/skills", detectionPaths: [".claude"] },
-  { id: "opencode", displayName: "OpenCode", root: ".opencode/skills", detectionPaths: [".opencode"] },
-  { id: "pi", displayName: "Pi", root: ".pi/skills", detectionPaths: [".pi"] },
-  { id: "oh-my-pi", displayName: "Oh My Pi", root: ".omp/skills", detectionPaths: [".omp"] },
-  { id: "gemini", displayName: "Gemini CLI", root: ".gemini/skills", detectionPaths: [".gemini"] },
+  { id: "cline", displayName: "Cline", root: ".cline/skills", detectionPaths: [".cline"] },
+  { id: "codeartsagent", displayName: "CodeArts", root: ".codeartsdoer/skills", detectionPaths: [".codeartsdoer"] },
+  { id: "codebuddy", displayName: "CodeBuddy Code (CLI)", root: ".codebuddy/skills", detectionPaths: [".codebuddy"] },
+  { id: "codex", displayName: "Codex", root: ".agents/skills", detectionPaths: [".agents/skills", ".codex/skills"] },
+  { id: "command-code", displayName: "Command Code", root: ".commandcode/skills", detectionPaths: [".commandcode"] },
+  { id: "continue", displayName: "Continue", root: ".continue/skills", detectionPaths: [".continue"] },
+  { id: "costrict", displayName: "CoStrict", root: ".cospec/skills", detectionPaths: [".cospec"] },
+  { id: "crush", displayName: "Crush", root: ".crush/skills", detectionPaths: [".crush"] },
   { id: "cursor", displayName: "Cursor", root: ".cursor/skills", detectionPaths: [".cursor"] },
+  { id: "devin", displayName: "Devin Desktop (formerly Windsurf)", root: ".devin/skills", detectionPaths: [".devin", ".windsurf"] },
+  { id: "factory", displayName: "Factory Droid", root: ".factory/skills", detectionPaths: [".factory"] },
+  { id: "forgecode", displayName: "ForgeCode", root: ".forge/skills", detectionPaths: [".forge"] },
+  { id: "gemini", displayName: "Gemini CLI", root: ".gemini/skills", detectionPaths: [".gemini"] },
   {
     id: "github-copilot",
     displayName: "GitHub Copilot",
@@ -36,9 +46,24 @@ const DEFINITIONS: readonly HarnessDefinition[] = [
       ".github/.mcp.json"
     ]
   },
+  { id: "hermes", displayName: "Hermes Agent", root: ".hermes/skills", detectionPaths: [".hermes", "HERMES.md", ".hermes.md"] },
+  { id: "iflow", displayName: "iFlow", root: ".iflow/skills", detectionPaths: [".iflow"] },
+  { id: "junie", displayName: "Junie", root: ".junie/skills", detectionPaths: [".junie"] },
+  { id: "kilocode", displayName: "Kilo Code", root: ".kilocode/skills", detectionPaths: [".kilocode"] },
   { id: "kimi", displayName: "Kimi Code", root: ".kimi-code/skills", detectionPaths: [".kimi-code", ".kimi"] },
+  { id: "kiro", displayName: "Kiro", root: ".kiro/skills", detectionPaths: [".kiro"] },
+  { id: "lingma", displayName: "Lingma", root: ".lingma/skills", detectionPaths: [".lingma"] },
+  { id: "oh-my-pi", displayName: "Oh My Pi", root: ".omp/skills", detectionPaths: [".omp"] },
+  { id: "opencode", displayName: "OpenCode", root: ".opencode/skills", detectionPaths: [".opencode"] },
+  { id: "pi", displayName: "Pi", root: ".pi/skills", detectionPaths: [".pi"] },
+  { id: "qoder", displayName: "Qoder", root: ".qoder/skills", detectionPaths: [".qoder"] },
   { id: "qwen", displayName: "Qwen Code", root: ".qwen/skills", detectionPaths: [".qwen"] },
-  { id: "kilocode", displayName: "Kilo Code", root: ".kilocode/skills", detectionPaths: [".kilocode"] }
+  { id: "roocode", displayName: "Zoo Code", root: ".roo/skills", detectionPaths: [".roo"] },
+  { id: "rovodev", displayName: "Rovo Dev CLI", root: ".rovodev/skills", detectionPaths: [".rovodev/skills", ".rovodev"] },
+  { id: "trae", displayName: "Trae", root: ".trae/skills", detectionPaths: [".trae"] },
+  { id: "vibe", displayName: "Mistral Vibe", root: ".vibe/skills", detectionPaths: [".vibe"] },
+  { id: "zcode", displayName: "ZCode", root: ".zcode/skills", detectionPaths: [".zcode"] },
+  { id: "zed", displayName: "Zed Agent", root: ".agents/skills", detectionPaths: [".zed", ".agents/skills"] }
 ];
 
 async function exists(file: string): Promise<boolean> {

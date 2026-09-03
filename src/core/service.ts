@@ -2,7 +2,13 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 
 import { SKILL_DEPENDENCIES } from "../catalog/dependencies.js";
-import { CANONICAL_PRESETS, PRESETS, presetRoots, type CanonicalPreset } from "../catalog/presets.js";
+import {
+  CANONICAL_PRESETS,
+  PRESETS,
+  presetRoots,
+  type CanonicalPreset,
+  type SkillCatalogEntry
+} from "../catalog/presets.js";
 import {
   hashFile,
   loadUpstreamCatalog,
@@ -67,22 +73,69 @@ function installationId(projectRoot: string): string {
   return createHash("sha256").update(path.resolve(projectRoot)).digest("hex").slice(0, 32);
 }
 
+export function selectAdditionalSkills(
+  ids: readonly string[],
+  availableSkills: ReadonlySet<string>
+): string[] {
+  const selected = [...new Set(ids)].sort();
+  for (const id of selected) {
+    if (!availableSkills.has(id)) {
+      throw new MattpackError("UNKNOWN_SKILL", `Unknown skill: ${id}`, {
+        skills: [...availableSkills].sort()
+      });
+    }
+  }
+  return selected;
+}
+
+export async function skillSelectionCatalog(
+  packageRoot = packageRootFrom()
+): Promise<readonly SkillCatalogEntry[]> {
+  const catalog = await loadUpstreamCatalog(packageRoot);
+  const available = new Set(catalog.skills.keys());
+  const presets = new Map(CANONICAL_PRESETS.map((preset) => {
+    const roots = presetRoots(preset, catalog);
+    return [preset, {
+      roots: new Set(roots),
+      skills: new Set(resolveSkillSet(roots, available, SKILL_DEPENDENCIES).skills)
+    }] as const;
+  }));
+  return [...catalog.skills.values()]
+    .sort((left, right) => left.name.localeCompare(right.name))
+    .map((skill) => ({
+      name: skill.name,
+      description: skill.description,
+      relations: CANONICAL_PRESETS.map((preset) => {
+        const resolved = presets.get(preset);
+        const relation = resolved?.roots.has(skill.name)
+          ? "root" as const
+          : resolved?.skills.has(skill.name)
+            ? "dependency" as const
+            : "none" as const;
+        return { preset, relation };
+      })
+    }));
+}
+
 async function desiredInstallation(input: {
   projectRoot: string;
   packageRoot: string;
   preset: CanonicalPreset;
+  additionalSkillIds: readonly string[];
   harnessIds: readonly string[];
   includeDependencies: boolean;
   priorLock?: LockState;
 }): Promise<Desired> {
   const catalog = await loadUpstreamCatalog(input.packageRoot);
+  const availableSkills = new Set(catalog.skills.keys());
+  const additionalSkills = selectAdditionalSkills(input.additionalSkillIds, availableSkills);
   const adapters = selectHarnesses(input.harnessIds);
   if (adapters.length === 0) throw new MattpackError("NON_INTERACTIVE_INPUT_REQUIRED", "Select at least one harness");
   const targets = deduplicateTargets(input.projectRoot, adapters);
   for (const target of targets) await assertContained(input.projectRoot, target.absoluteRoot);
   const resolution = resolveSkillSet(
-    presetRoots(input.preset, catalog),
-    new Set(catalog.skills.keys()),
+    [...presetRoots(input.preset, catalog), ...additionalSkills],
+    availableSkills,
     SKILL_DEPENDENCIES,
     input.includeDependencies
   );
@@ -119,6 +172,7 @@ async function desiredInstallation(input: {
   const config: ConfigState = {
     schemaVersion: 1,
     preset: input.preset,
+    additionalSkills,
     harnesses,
     includeDependencies: input.includeDependencies
   };
@@ -169,6 +223,7 @@ export async function installProject(input: {
   projectRoot: string;
   packageRoot?: string;
   preset: CanonicalPreset;
+  additionalSkills?: readonly string[];
   harnesses: readonly string[];
   includeDependencies?: boolean;
   dryRun?: boolean;
@@ -181,6 +236,7 @@ export async function installProject(input: {
     projectRoot: input.projectRoot,
     packageRoot,
     preset: input.preset,
+    additionalSkillIds: input.additionalSkills ?? prior.config?.additionalSkills ?? [],
     harnessIds: input.harnesses,
     includeDependencies: input.includeDependencies ?? true,
     ...(prior.lock ? { priorLock: prior.lock } : {})
@@ -223,6 +279,7 @@ async function updatePlan(projectRoot: string, packageRoot: string): Promise<{
     projectRoot,
     packageRoot,
     preset: prior.config.preset,
+    additionalSkillIds: prior.config.additionalSkills,
     harnessIds: prior.config.harnesses,
     includeDependencies: prior.config.includeDependencies,
     priorLock: prior.lock

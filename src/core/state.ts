@@ -11,6 +11,7 @@ export const OWNER_FILE = ".mattpack-owner.json";
 export interface ConfigState {
   schemaVersion: 1;
   preset: CanonicalPreset;
+  additionalSkills: readonly string[];
   harnesses: readonly string[];
   includeDependencies: boolean;
 }
@@ -139,6 +140,9 @@ export async function readConfig(projectRoot: string, optional = false): Promise
   return {
     schemaVersion: 1,
     preset,
+    additionalSkills: value.additionalSkills === undefined
+      ? []
+      : stringList(value.additionalSkills, "config.additionalSkills"),
     harnesses: stringList(value.harnesses, "config.harnesses"),
     includeDependencies: bool(value, "includeDependencies", true)
   };

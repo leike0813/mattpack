@@ -36,27 +36,52 @@ npx @leike0813/mattpack@0.1.0 init --tools codex
 | `beta-only` | `in-progress` | All beta roots plus required stable dependencies | 8 | `code-review (requires)`<br>`codebase-design (requires)`<br>`grilling (requires)`<br>`setup-matt-pocock-skills (setupCompanion)`<br>`writing-for-agents (requires)` | 13 |
 | `everything` | `beta`<br>`experimental` | All promoted, in-progress, and misc skills | 37 | — | 37 |
 
-A preset selects roots. Mattpack recursively adds declared `requires` and `setupCompanion` skills, reports why each was added, deduplicates the result, and rejects missing nodes or cycles. `beta-only` has beta roots but may add stable dependencies. Use `--no-deps` only when you accept a potentially unusable installation.
+A preset selects roots. Add individual roots with `--skills <comma-separated ids>` or the interactive skill catalog. Mattpack recursively adds declared `requires` and `setupCompanion` skills, reports why each was added, deduplicates the result, and rejects missing nodes or cycles. `beta-only` has beta roots but may add stable dependencies. Use `--no-deps` only when you accept a potentially unusable installation.
 
 ## Supported harnesses
 
 | Harness | Project-local skill root |
 |---|---|
 | `agents` | `.agents/skills` |
-| `codex` | `.agents/skills` |
-| `zed` | `.agents/skills` |
+| `amazon-q` | `.amazonq/skills` |
+| `antigravity` | `.agents/skills` |
+| `auggie` | `.augment/skills` |
+| `bob` | `.bob/skills` |
 | `claude` | `.claude/skills` |
+| `cline` | `.cline/skills` |
+| `codeartsagent` | `.codeartsdoer/skills` |
+| `codebuddy` | `.codebuddy/skills` |
+| `codex` | `.agents/skills` |
+| `command-code` | `.commandcode/skills` |
+| `continue` | `.continue/skills` |
+| `costrict` | `.cospec/skills` |
+| `crush` | `.crush/skills` |
+| `cursor` | `.cursor/skills` |
+| `devin` | `.devin/skills` |
+| `factory` | `.factory/skills` |
+| `forgecode` | `.forge/skills` |
+| `gemini` | `.gemini/skills` |
+| `github-copilot` | `.github/skills` |
+| `hermes` | `.hermes/skills` |
+| `iflow` | `.iflow/skills` |
+| `junie` | `.junie/skills` |
+| `kilocode` | `.kilocode/skills` |
+| `kimi` | `.kimi-code/skills` |
+| `kiro` | `.kiro/skills` |
+| `lingma` | `.lingma/skills` |
+| `oh-my-pi` | `.omp/skills` |
 | `opencode` | `.opencode/skills` |
 | `pi` | `.pi/skills` |
-| `oh-my-pi` | `.omp/skills` |
-| `gemini` | `.gemini/skills` |
-| `cursor` | `.cursor/skills` |
-| `github-copilot` | `.github/skills` |
-| `kimi` | `.kimi-code/skills` |
+| `qoder` | `.qoder/skills` |
 | `qwen` | `.qwen/skills` |
-| `kilocode` | `.kilocode/skills` |
+| `roocode` | `.roo/skills` |
+| `rovodev` | `.rovodev/skills` |
+| `trae` | `.trae/skills` |
+| `vibe` | `.vibe/skills` |
+| `zcode` | `.zcode/skills` |
+| `zed` | `.agents/skills` |
 
-`agents`, `codex`, and `zed` share `.agents/skills`; selecting them together writes one physical tree and records every logical consumer. Detection is advisory, while an explicit `--tools` selection wins.
+`agents`, `antigravity`, `codex`, and `zed` share `.agents/skills`; selecting them together writes one physical tree and records every logical consumer. Detection is advisory, while an explicit `--tools` selection wins.
 
 ## Commands
 
@@ -69,7 +94,7 @@ mattpack doctor
 mattpack remove
 ```
 
-Common options are `--dir <path>`, `--tools <comma-separated ids>`, `--tools all`, `--yes`, `--dry-run`, `--json`, `--no-color`, `--force`, and `--no-deps`. Interactive `mattpack init` opens the two-step preset and tool setup TUI; an explicit preset starts at the tool step. Supplying `--tools` skips the setup TUI, and an omitted preset then defaults to `default`. Detected harnesses are pre-selected on first setup. Non-interactive ambiguity is an error. `inspect` uses the installation planner without writing, `update` reconciles against the snapshot in the running package, and `doctor` reports drift without repairing it.
+Common options are `--dir <path>`, `--tools <comma-separated ids>`, `--tools all`, `--skills <comma-separated ids>`, `--yes`, `--dry-run`, `--json`, `--no-color`, `--force`, and `--no-deps`. `--skills` adds explicit roots to the persisted selection for `init` and to the plan for `inspect`; use the TUI to remove selections. Interactive `mattpack init` keeps Preset and Tools as two main steps and opens a paginated skill catalog from Preset with `S`. An explicit preset starts at Tools but can return to editable Preset and Skills pages. Supplying `--tools` skips the setup TUI, and an omitted preset then defaults to `default`. Detected harnesses are pre-selected on first setup. Non-interactive ambiguity is an error. `inspect` uses the installation planner without writing, `update` reconciles against the snapshot in the running package, and `doctor` reports drift without repairing it.
 
 `init`, `update`, and `remove` show the real plan before interactive writes. Scripts, agents, and JSON mutations must pass `--yes`; dry runs and no-op updates do not require approval. Declining a prompt leaves the project unchanged, while Ctrl+C exits with status 130.
 

@@ -99,7 +99,7 @@ for (const name of CANONICAL_PRESETS) {
 
 lines.push(
   "",
-  "A preset selects roots. Mattpack recursively adds declared `requires` and `setupCompanion` skills, reports why each was added, deduplicates the result, and rejects missing nodes or cycles. `beta-only` has beta roots but may add stable dependencies. Use `--no-deps` only when you accept a potentially unusable installation.",
+  "A preset selects roots. Add individual roots with `--skills <comma-separated ids>` or the interactive skill catalog. Mattpack recursively adds declared `requires` and `setupCompanion` skills, reports why each was added, deduplicates the result, and rejects missing nodes or cycles. `beta-only` has beta roots but may add stable dependencies. Use `--no-deps` only when you accept a potentially unusable installation.",
   "",
   "## Supported harnesses",
   "",
@@ -108,7 +108,7 @@ lines.push(
 );
 chineseLines.push(
   "",
-  "Preset 选择 root。Mattpack 会递归加入声明为 `requires` 和 `setupCompanion` 的 skill，说明每个新增 skill 的原因，去重结果，并拒绝缺失节点或循环依赖。`beta-only` 的 root 只来自 beta，但仍可能加入 stable 依赖。只有在接受安装结果可能不可用时才使用 `--no-deps`。",
+  "Preset 选择 root。可以通过 `--skills <逗号分隔的 id>` 或交互式 skill catalog 添加单独的 root。Mattpack 会递归加入声明为 `requires` 和 `setupCompanion` 的 skill，说明每个新增 skill 的原因，去重结果，并拒绝缺失节点或循环依赖。`beta-only` 的 root 只来自 beta，但仍可能加入 stable 依赖。只有在接受安装结果可能不可用时才使用 `--no-deps`。",
   "",
   "## 支持的 Harness",
   "",
@@ -124,7 +124,7 @@ for (const adapter of HARNESS_ADAPTERS) {
 
 lines.push(
   "",
-  "`agents`, `codex`, and `zed` share `.agents/skills`; selecting them together writes one physical tree and records every logical consumer. Detection is advisory, while an explicit `--tools` selection wins.",
+  "`agents`, `antigravity`, `codex`, and `zed` share `.agents/skills`; selecting them together writes one physical tree and records every logical consumer. Detection is advisory, while an explicit `--tools` selection wins.",
   "",
   "## Commands",
   "",
@@ -137,7 +137,7 @@ lines.push(
   "mattpack remove",
   "```",
   "",
-  "Common options are `--dir <path>`, `--tools <comma-separated ids>`, `--tools all`, `--yes`, `--dry-run`, `--json`, `--no-color`, `--force`, and `--no-deps`. Interactive `mattpack init` opens the two-step preset and tool setup TUI; an explicit preset starts at the tool step. Supplying `--tools` skips the setup TUI, and an omitted preset then defaults to `default`. Detected harnesses are pre-selected on first setup. Non-interactive ambiguity is an error. `inspect` uses the installation planner without writing, `update` reconciles against the snapshot in the running package, and `doctor` reports drift without repairing it.",
+  "Common options are `--dir <path>`, `--tools <comma-separated ids>`, `--tools all`, `--skills <comma-separated ids>`, `--yes`, `--dry-run`, `--json`, `--no-color`, `--force`, and `--no-deps`. `--skills` adds explicit roots to the persisted selection for `init` and to the plan for `inspect`; use the TUI to remove selections. Interactive `mattpack init` keeps Preset and Tools as two main steps and opens a paginated skill catalog from Preset with `S`. An explicit preset starts at Tools but can return to editable Preset and Skills pages. Supplying `--tools` skips the setup TUI, and an omitted preset then defaults to `default`. Detected harnesses are pre-selected on first setup. Non-interactive ambiguity is an error. `inspect` uses the installation planner without writing, `update` reconciles against the snapshot in the running package, and `doctor` reports drift without repairing it.",
   "",
   "`init`, `update`, and `remove` show the real plan before interactive writes. Scripts, agents, and JSON mutations must pass `--yes`; dry runs and no-op updates do not require approval. Declining a prompt leaves the project unchanged, while Ctrl+C exits with status 130.",
   "",
@@ -176,7 +176,7 @@ lines.push(
 );
 chineseLines.push(
   "",
-  "`agents`、`codex` 和 `zed` 共用 `.agents/skills`。同时选择它们时只写入一棵物理目录，并记录所有逻辑消费者。检测结果只作建议，显式传入的 `--tools` 优先。",
+  "`agents`、`antigravity`、`codex` 和 `zed` 共用 `.agents/skills`。同时选择它们时只写入一棵物理目录，并记录所有逻辑消费者。检测结果只作建议，显式传入的 `--tools` 优先。",
   "",
   "## 命令",
   "",
@@ -189,7 +189,7 @@ chineseLines.push(
   "mattpack remove",
   "```",
   "",
-  "常用选项包括 `--dir <path>`、`--tools <逗号分隔的 id>`、`--tools all`、`--yes`、`--dry-run`、`--json`、`--no-color`、`--force` 和 `--no-deps`。交互式 `mattpack init` 会打开 preset 和 tool 两步设置 TUI；显式传入 preset 时直接从 tool 步开始。传入 `--tools` 会跳过设置 TUI，此时未提供 preset 就默认使用 `default`。首次安装会预选检测到的 harness。非交互环境下缺少必要输入会报错。`inspect` 使用真实安装规划器但不会写入，`update` 根据当前运行包中的快照同步，`doctor` 只报告漂移而不会自动修复。",
+  "常用选项包括 `--dir <path>`、`--tools <逗号分隔的 id>`、`--tools all`、`--skills <逗号分隔的 id>`、`--yes`、`--dry-run`、`--json`、`--no-color`、`--force` 和 `--no-deps`。`--skills` 会为 `init` 的持久选择或 `inspect` 的检查计划追加显式 root；移除已保存的选择需使用 TUI。交互式 `mattpack init` 仍以 Preset 和 Tools 为两个主步骤，在 Preset 页按 `S` 可打开分页 skill catalog。显式传入 preset 时从 Tools 开始，但可以返回编辑 Preset 和 Skills。传入 `--tools` 会跳过设置 TUI，此时未提供 preset 就默认使用 `default`。首次安装会预选检测到的 harness。非交互环境下缺少必要输入会报错。`inspect` 使用真实安装规划器但不会写入，`update` 根据当前运行包中的快照同步，`doctor` 只报告漂移而不会自动修复。",
   "",
   "`init`、`update` 和 `remove` 在交互式写入前会展示真实计划。脚本、agent 和 JSON 写入必须传入 `--yes`；dry-run 和无变化的 update 不需要确认。拒绝确认不会修改项目，Ctrl+C 会以状态码 130 退出。",
   "",

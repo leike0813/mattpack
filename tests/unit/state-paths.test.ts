@@ -49,9 +49,18 @@ describe("paths and state", () => {
       assert.deepEqual(await readConfig(root), {
         schemaVersion: 1,
         preset: "default",
+        additionalSkills: [],
         harnesses: ["codex"],
         includeDependencies: true
       });
+      await writeFile(path.join(root, ".mattpack", "config.json"), JSON.stringify({
+        schemaVersion: 1,
+        preset: "general",
+        additionalSkills: ["teach", "research", "teach"],
+        harnesses: ["codex"],
+        includeDependencies: true
+      }));
+      assert.deepEqual((await readConfig(root))?.additionalSkills, ["research", "teach"]);
       await writeFile(path.join(root, ".mattpack", "config.json"), "[]");
       await assert.rejects(
         readConfig(root),

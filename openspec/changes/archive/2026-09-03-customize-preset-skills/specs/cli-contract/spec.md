@@ -1,28 +1,4 @@
-# cli-contract Specification
-
-## Purpose
-
-Defines Mattpack's command-line inputs and stable human and machine-readable behavior for interactive users, scripts, and package smoke tests.
-
-## Requirements
-
-### Requirement: Command surface
-Mattpack SHALL implement `init`, `inspect`, `list`, `update`, `doctor`, and `remove`, with omitted command and direct preset forms resolving to `init`.
-
-#### Scenario: Direct preset form
-- **WHEN** a user runs `mattpack default --tools codex`
-- **THEN** it behaves as `mattpack init default --tools codex`
-
-#### Scenario: Unknown syntax
-- **WHEN** a command, preset, tool, option, or option combination is invalid
-- **THEN** Mattpack returns a stable argument error and help guidance without mutation
-
-### Requirement: Project-root resolution
-Mattpack SHALL resolve the project root in order from explicit `--dir`, an ancestor containing Mattpack state, Git top-level, then current working directory.
-
-#### Scenario: Explicit directory is supplied
-- **WHEN** `--dir` names a valid project directory
-- **THEN** that directory wins over state, Git, and current-directory discovery
+## ADDED Requirements
 
 ### Requirement: Additional skill option
 `init` and `inspect` SHALL accept `--skills <ids>` as a comma-separated list of explicit skill roots. Supplied IDs SHALL be added to persisted selections, while omitting the option SHALL preserve persisted selections.
@@ -42,6 +18,8 @@ Mattpack SHALL resolve the project root in order from explicit `--dir`, an ances
 #### Scenario: Explicit skills enter interactive setup
 - **WHEN** `--skills` is supplied and the setup TUI is still required
 - **THEN** those roots are pre-selected and remain editable before final submission
+
+## MODIFIED Requirements
 
 ### Requirement: Interactive and non-interactive behavior
 Missing init or inspect tool choices SHALL be prompted only on a TTY through the setup TUI. An interactive `init` with no preset SHALL start at the preset step, while an explicit preset SHALL start at the tool step with that preset initially selected. Supplying `--tools` SHALL skip the setup TUI, and an omitted preset SHALL then resolve to `default`. Existing preset, additional skill, and tool configuration SHALL be pre-selected, and first-time setup SHALL pre-select detected harnesses when no configuration exists.
@@ -112,47 +90,3 @@ The CLI SHALL retain Preset and Tools as its two main setup steps. The Preset st
 - **THEN** the TUI updates only its own prompt area without clearing unrelated terminal output
 - **WHEN** a user presses an unsupported key
 - **THEN** the TUI does not redraw or change selection state
-
-### Requirement: Plan confirmation
-Interactive `init`, `update`, and `remove` SHALL display the real deterministic plan before writing and SHALL default confirmation to Yes. Non-interactive or JSON writes SHALL require `--yes`, while dry runs and no-op updates SHALL not require approval.
-
-#### Scenario: Default confirmation
-- **WHEN** an interactive write plan requires confirmation
-- **THEN** the confirmation prompt has Yes selected by default and pressing Enter accepts it
-
-#### Scenario: Non-interactive mutation
-- **WHEN** an init, update, or remove plan contains writes outside a TTY and `--yes` is absent
-- **THEN** Mattpack returns `NON_INTERACTIVE_INPUT_REQUIRED` without mutation
-
-#### Scenario: No-op update
-- **WHEN** update resolves to no changes outside a TTY
-- **THEN** Mattpack reports the installation is already current without requiring `--yes`
-
-### Requirement: Human output
-Human output SHALL group planned actions by target and action kind, distinguish completion from inspection, and provide conflict or recovery guidance without changing the JSON contract. `--no-color` and `NO_COLOR` SHALL suppress ANSI styling.
-
-#### Scenario: Human-readable plan
-- **WHEN** an operation plan is rendered for an interactive user
-- **THEN** actions are grouped by target and action kind with conflicts and preserved drift called out separately
-
-#### Scenario: Plain output
-- **WHEN** `--no-color` is passed or `NO_COLOR` is set
-- **THEN** human-readable output contains no ANSI styling
-
-### Requirement: Dry-run and JSON contracts
-`inspect` and `--dry-run` SHALL never mutate. In `--json` mode stdout SHALL contain one valid JSON envelope and diagnostics SHALL use stderr.
-
-#### Scenario: Successful JSON command
-- **WHEN** a command succeeds with `--json`
-- **THEN** stdout contains `{ok, command, projectRoot, result}` with deterministic structured data
-
-#### Scenario: Failed JSON command
-- **WHEN** a command fails with `--json`
-- **THEN** stdout contains `{ok:false,error:{code,message,details}}` and no human prose
-
-### Requirement: Process boundary
-Core modules SHALL return structured values and typed domain errors; only the CLI entry point may print output or set process exit status.
-
-#### Scenario: Core operation fails
-- **WHEN** a catalog, state, planning, or filesystem boundary rejects input
-- **THEN** the CLI maps its stable error code to the selected output format and a nonzero status

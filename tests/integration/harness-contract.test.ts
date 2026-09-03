@@ -28,6 +28,8 @@ describe("shared harness contract", () => {
       const managed = path.join(skillRoot, "grill-me");
       try {
         await mkdir(managed, { recursive: true });
+        if (adapter.id === "antigravity") await mkdir(path.join(projectRoot, ".agent"));
+        assert.equal((await adapter.detect(projectRoot)).detected, true);
         await writeFile(path.join(managed, "mine.txt"), "unowned\n");
         const conflict = await installProject({
           projectRoot,

@@ -6,9 +6,9 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { applyPlan } from "../../src/core/apply.js";
-import { installProject } from "../../src/core/service.js";
+import { installProject, updateProject } from "../../src/core/service.js";
 import type { ReconciliationPlan } from "../../src/core/plan.js";
-import type { ConfigState, LockState } from "../../src/core/state.js";
+import { readConfig, type ConfigState, type LockState } from "../../src/core/state.js";
 
 const packageRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
@@ -49,7 +49,13 @@ describe("service scenarios", () => {
       await writeFile(path.join(sources, "a", "SKILL.md"), "a\n");
       await writeFile(path.join(sources, "b", "SKILL.md"), "b\n");
       await writeFile(path.join(root, "blocked"), "file, not directory\n");
-      const config: ConfigState = { schemaVersion: 1, preset: "general", harnesses: ["codex"], includeDependencies: true };
+      const config: ConfigState = {
+        schemaVersion: 1,
+        preset: "general",
+        additionalSkills: [],
+        harnesses: ["codex"],
+        includeDependencies: true
+      };
       const lock: LockState = {
         schemaVersion: 1,
         mattpackVersion: "0.1.0",
@@ -107,6 +113,37 @@ describe("service scenarios", () => {
       await assert.rejects(applyPlan(root, plan));
       assert.equal(await missing(path.join(root, ".agents", "skills", "a")), true);
       assert.equal(await missing(path.join(root, ".mattpack", "lock.json")), true);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("preserves explicit skill roots across preset changes and update", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "mattpack-additional-"));
+    try {
+      const installed = await installProject({
+        projectRoot: root,
+        packageRoot,
+        preset: "general",
+        additionalSkills: ["teach", "grilling", "teach"],
+        harnesses: ["codex"]
+      });
+      assert.equal(installed.resolution?.skills.includes("teach"), true);
+      assert.equal(installed.resolution?.roots.includes("grilling"), true);
+      assert.deepEqual((await readConfig(root))?.additionalSkills, ["grilling", "teach"]);
+
+      await installProject({ projectRoot: root, packageRoot, preset: "default", harnesses: ["codex"] });
+      assert.deepEqual((await readConfig(root))?.additionalSkills, ["grilling", "teach"]);
+      assert.equal((await updateProject({ projectRoot: root, packageRoot })).applied?.changed, false);
+
+      await installProject({
+        projectRoot: root,
+        packageRoot,
+        preset: "default",
+        additionalSkills: [],
+        harnesses: ["codex"]
+      });
+      assert.equal(await missing(path.join(root, ".agents", "skills", "teach")), true);
     } finally {
       await rm(root, { recursive: true, force: true });
     }

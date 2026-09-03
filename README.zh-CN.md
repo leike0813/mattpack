@@ -36,27 +36,52 @@ npx @leike0813/mattpack@0.1.0 init --tools codex
 | `beta-only` | `in-progress` | 所有 beta root 以及所需的 stable 依赖 | 8 | `code-review (requires)`<br>`codebase-design (requires)`<br>`grilling (requires)`<br>`setup-matt-pocock-skills (setupCompanion)`<br>`writing-for-agents (requires)` | 13 |
 | `everything` | `beta`<br>`experimental` | 所有已推广、in-progress 和 misc skill | 37 | — | 37 |
 
-Preset 选择 root。Mattpack 会递归加入声明为 `requires` 和 `setupCompanion` 的 skill，说明每个新增 skill 的原因，去重结果，并拒绝缺失节点或循环依赖。`beta-only` 的 root 只来自 beta，但仍可能加入 stable 依赖。只有在接受安装结果可能不可用时才使用 `--no-deps`。
+Preset 选择 root。可以通过 `--skills <逗号分隔的 id>` 或交互式 skill catalog 添加单独的 root。Mattpack 会递归加入声明为 `requires` 和 `setupCompanion` 的 skill，说明每个新增 skill 的原因，去重结果，并拒绝缺失节点或循环依赖。`beta-only` 的 root 只来自 beta，但仍可能加入 stable 依赖。只有在接受安装结果可能不可用时才使用 `--no-deps`。
 
 ## 支持的 Harness
 
 | Harness | 项目级 skill 目录 |
 |---|---|
 | `agents` | `.agents/skills` |
-| `codex` | `.agents/skills` |
-| `zed` | `.agents/skills` |
+| `amazon-q` | `.amazonq/skills` |
+| `antigravity` | `.agents/skills` |
+| `auggie` | `.augment/skills` |
+| `bob` | `.bob/skills` |
 | `claude` | `.claude/skills` |
+| `cline` | `.cline/skills` |
+| `codeartsagent` | `.codeartsdoer/skills` |
+| `codebuddy` | `.codebuddy/skills` |
+| `codex` | `.agents/skills` |
+| `command-code` | `.commandcode/skills` |
+| `continue` | `.continue/skills` |
+| `costrict` | `.cospec/skills` |
+| `crush` | `.crush/skills` |
+| `cursor` | `.cursor/skills` |
+| `devin` | `.devin/skills` |
+| `factory` | `.factory/skills` |
+| `forgecode` | `.forge/skills` |
+| `gemini` | `.gemini/skills` |
+| `github-copilot` | `.github/skills` |
+| `hermes` | `.hermes/skills` |
+| `iflow` | `.iflow/skills` |
+| `junie` | `.junie/skills` |
+| `kilocode` | `.kilocode/skills` |
+| `kimi` | `.kimi-code/skills` |
+| `kiro` | `.kiro/skills` |
+| `lingma` | `.lingma/skills` |
+| `oh-my-pi` | `.omp/skills` |
 | `opencode` | `.opencode/skills` |
 | `pi` | `.pi/skills` |
-| `oh-my-pi` | `.omp/skills` |
-| `gemini` | `.gemini/skills` |
-| `cursor` | `.cursor/skills` |
-| `github-copilot` | `.github/skills` |
-| `kimi` | `.kimi-code/skills` |
+| `qoder` | `.qoder/skills` |
 | `qwen` | `.qwen/skills` |
-| `kilocode` | `.kilocode/skills` |
+| `roocode` | `.roo/skills` |
+| `rovodev` | `.rovodev/skills` |
+| `trae` | `.trae/skills` |
+| `vibe` | `.vibe/skills` |
+| `zcode` | `.zcode/skills` |
+| `zed` | `.agents/skills` |
 
-`agents`、`codex` 和 `zed` 共用 `.agents/skills`。同时选择它们时只写入一棵物理目录，并记录所有逻辑消费者。检测结果只作建议，显式传入的 `--tools` 优先。
+`agents`、`antigravity`、`codex` 和 `zed` 共用 `.agents/skills`。同时选择它们时只写入一棵物理目录，并记录所有逻辑消费者。检测结果只作建议，显式传入的 `--tools` 优先。
 
 ## 命令
 
@@ -69,7 +94,7 @@ mattpack doctor
 mattpack remove
 ```
 
-常用选项包括 `--dir <path>`、`--tools <逗号分隔的 id>`、`--tools all`、`--yes`、`--dry-run`、`--json`、`--no-color`、`--force` 和 `--no-deps`。交互式 `mattpack init` 会打开 preset 和 tool 两步设置 TUI；显式传入 preset 时直接从 tool 步开始。传入 `--tools` 会跳过设置 TUI，此时未提供 preset 就默认使用 `default`。首次安装会预选检测到的 harness。非交互环境下缺少必要输入会报错。`inspect` 使用真实安装规划器但不会写入，`update` 根据当前运行包中的快照同步，`doctor` 只报告漂移而不会自动修复。
+常用选项包括 `--dir <path>`、`--tools <逗号分隔的 id>`、`--tools all`、`--skills <逗号分隔的 id>`、`--yes`、`--dry-run`、`--json`、`--no-color`、`--force` 和 `--no-deps`。`--skills` 会为 `init` 的持久选择或 `inspect` 的检查计划追加显式 root；移除已保存的选择需使用 TUI。交互式 `mattpack init` 仍以 Preset 和 Tools 为两个主步骤，在 Preset 页按 `S` 可打开分页 skill catalog。显式传入 preset 时从 Tools 开始，但可以返回编辑 Preset 和 Skills。传入 `--tools` 会跳过设置 TUI，此时未提供 preset 就默认使用 `default`。首次安装会预选检测到的 harness。非交互环境下缺少必要输入会报错。`inspect` 使用真实安装规划器但不会写入，`update` 根据当前运行包中的快照同步，`doctor` 只报告漂移而不会自动修复。
 
 `init`、`update` 和 `remove` 在交互式写入前会展示真实计划。脚本、agent 和 JSON 写入必须传入 `--yes`；dry-run 和无变化的 update 不需要确认。拒绝确认不会修改项目，Ctrl+C 会以状态码 130 退出。
 

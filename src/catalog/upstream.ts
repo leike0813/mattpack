@@ -21,6 +21,7 @@ export interface UpstreamLock {
 
 export interface SkillRecord {
   name: string;
+  description: string;
   bucket: SourceBucket;
   sourcePath: string;
   files: readonly string[];
@@ -81,17 +82,24 @@ export async function loadUpstreamLock(packageRoot = packageRootFrom()): Promise
   };
 }
 
-function frontmatterName(content: string, source: string): string {
+function frontmatter(content: string, source: string): { name: string; description: string } {
   const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u.exec(content);
   if (!match?.[1]) invalid(`Missing YAML frontmatter: ${source}`);
-  const names = match[1]
-    .split(/\r?\n/u)
-    .filter((line) => /^name\s*:/u.test(line))
-    .map((line) => line.replace(/^name\s*:\s*/u, "").trim().replace(/^(['"])(.*)\1$/u, "$2"));
-  if (names.length !== 1 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(names[0] ?? "")) {
+  const lines = match[1].split(/\r?\n/u);
+  const scalar = (key: "name" | "description"): string => {
+    const values = lines
+      .filter((line) => new RegExp(`^${key}\\s*:`).test(line))
+      .map((line) => line.replace(new RegExp(`^${key}\\s*:\\s*`), "").trim().replace(/^(['"])(.*)\1$/u, "$2"));
+    if (values.length !== 1 || !values[0] || values[0] === ">" || values[0] === "|") {
+      invalid(`Invalid skill ${key} in ${source}`);
+    }
+    return values[0];
+  };
+  const name = scalar("name");
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(name)) {
     invalid(`Invalid skill name in ${source}`);
   }
-  return names[0] ?? invalid(`Invalid skill name in ${source}`);
+  return { name, description: scalar("description") };
 }
 
 async function listSkillFiles(skillRoot: string): Promise<string[]> {
@@ -158,10 +166,10 @@ export async function loadCatalogFromVendor(
       } catch (error) {
         invalid(`Missing SKILL.md: ${sourcePath}`, error);
       }
-      const name = frontmatterName(skillMd, `${sourcePath}/SKILL.md`);
+      const { name, description } = frontmatter(skillMd, `${sourcePath}/SKILL.md`);
       if (name !== directoryName) invalid(`Skill directory and frontmatter disagree: ${sourcePath}`);
       if (skills.has(name)) invalid(`Duplicate skill identity: ${name}`);
-      const record = { name, bucket, sourcePath, files: await listSkillFiles(skillRoot) };
+      const record = { name, description, bucket, sourcePath, files: await listSkillFiles(skillRoot) };
       skills.set(name, record);
       byBucket[bucket].push(name);
     }

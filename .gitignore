@@ -1,4 +1,3 @@
-.agents/
 .claude/
 .codebuddy/
 .kilocode/
@@ -15,3 +14,11 @@ test-dist/
 coverage/
 *.tgz
 .mattpack/
+
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/ref-openspec-bump/
+!.agents/skills/ref-openspec-bump/**
+!.agents/skills/upstream-bump/
+!.agents/skills/upstream-bump/**

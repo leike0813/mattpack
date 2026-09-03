@@ -406,30 +406,56 @@ interface HarnessAdapter {
 
 Keep preset resolution, dependency closure, ownership, copying, and conflict handling outside adapters.
 
-Initial important project-local mappings:
+Verified project-local mappings:
 
 | ID | Skill root |
 |---|---|
 | `agents` | `.agents/skills` |
-| `codex` | `.agents/skills` |
-| `zed` | `.agents/skills` |
+| `amazon-q` | `.amazonq/skills` |
+| `antigravity` | `.agents/skills` |
+| `auggie` | `.augment/skills` |
+| `bob` | `.bob/skills` |
 | `claude` | `.claude/skills` |
+| `cline` | `.cline/skills` |
+| `codeartsagent` | `.codeartsdoer/skills` |
+| `codebuddy` | `.codebuddy/skills` |
+| `codex` | `.agents/skills` |
+| `command-code` | `.commandcode/skills` |
+| `continue` | `.continue/skills` |
+| `costrict` | `.cospec/skills` |
+| `crush` | `.crush/skills` |
+| `cursor` | `.cursor/skills` |
+| `devin` | `.devin/skills` |
+| `factory` | `.factory/skills` |
+| `forgecode` | `.forge/skills` |
+| `gemini` | `.gemini/skills` |
+| `github-copilot` | `.github/skills` |
+| `hermes` | `.hermes/skills` |
+| `iflow` | `.iflow/skills` |
+| `junie` | `.junie/skills` |
+| `kilocode` | `.kilocode/skills` |
+| `kimi` | `.kimi-code/skills` |
+| `kiro` | `.kiro/skills` |
+| `lingma` | `.lingma/skills` |
+| `oh-my-pi` | `.omp/skills` |
 | `opencode` | `.opencode/skills` |
 | `pi` | `.pi/skills` |
-| `oh-my-pi` | `.omp/skills` |
-| `gemini` | `.gemini/skills` |
-| `cursor` | `.cursor/skills` |
-| `github-copilot` | `.github/skills` |
-| `kimi` | `.kimi-code/skills` |
+| `qoder` | `.qoder/skills` |
 | `qwen` | `.qwen/skills` |
-| `kilocode` | `.kilocode/skills` |
+| `roocode` | `.roo/skills` |
+| `rovodev` | `.rovodev/skills` |
+| `trae` | `.trae/skills` |
+| `vibe` | `.vibe/skills` |
+| `zcode` | `.zcode/skills` |
+| `zed` | `.agents/skills` |
 
 Rules:
 
+- The registry must cover every canonical tool in the pinned OpenSpec reference with a verified project-local skill target. Global-only targets and compatibility aliases are unsupported.
 - A v1 adapter must resolve beneath the project root. Global-only harness targets are unsupported.
 - Detection is advisory; explicit user selection is authoritative.
 - Never guess a target path by analogy. Verify it against official documentation or the pinned OpenSpec reference and add fixture tests.
-- If several logical harnesses resolve to one physical root, write one tree and record all consumers. In particular, `agents`, `codex`, and `zed` share `.agents/skills`.
+- If several logical harnesses resolve to one physical root, write one tree and record all consumers. In particular, `agents`, `antigravity`, `codex`, and `zed` share `.agents/skills`.
 - Preserve original skill names and directory structure:
 
 ```text
@@ -454,9 +480,12 @@ Example intent file:
 {
   "schemaVersion": 1,
   "preset": "default",
+  "additionalSkills": [],
   "harnesses": ["codex", "opencode"]
 }
 ```
+
+`additionalSkills` records sorted, deduplicated roots explicitly selected on top of the preset. A schema version 1 config without the field means an empty selection.
 
 The generated lock must record at least:
 
@@ -516,7 +545,7 @@ mattpack doctor
 mattpack remove
 ```
 
-In an interactive terminal, `mattpack init` opens the two-step preset and tool setup TUI. An explicit preset opens only the tool step. Supplying `--tools` skips the setup TUI, and an omitted preset then resolves to `default`.
+In an interactive terminal, `mattpack init` opens the two-step preset and tool setup TUI. The preset step opens a nested paginated skill catalog for adding explicit roots. An explicit preset starts at the tool step, which may return to an editable preset step. Supplying `--tools` skips the setup TUI, and an omitted preset then resolves to `default`.
 
 Common options:
 
@@ -524,6 +553,7 @@ Common options:
 --dir <path>
 --tools <ids>         comma-separated harness ids
 --tools all           all supported project-local harnesses
+--skills <ids>        comma-separated skill ids added to the preset
 --yes
 --dry-run
 --json
@@ -536,6 +566,7 @@ Common options:
 Rules:
 
 - No `--global` in v1.
+- `--skills` is accepted by `init` and `inspect`; supplied ids are added to persisted selections, while interactive setup is the removal path.
 - Interactive prompts require a TTY.
 - In `--json` mode, stdout must remain valid JSON and diagnostics go to stderr.
 - Non-interactive ambiguity is an error.
@@ -564,6 +595,7 @@ Every behavior change requires tests in the same change.
 Unit tests must cover:
 
 - preset aliases and dynamic source discovery;
+- skill descriptions, preset relationships, and explicit additional roots;
 - dependency closure, missing nodes, reason chains, and cycle errors;
 - shared physical-target deduplication;
 - path containment and traversal rejection;
