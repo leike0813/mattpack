@@ -17,13 +17,13 @@ Mattpack 是一个非官方的项目级安装器，用于从 [mattpocock/skills]
 ## 快速开始
 
 ```sh
-npx mattpack init default --harness codex
+npx @leike0813/mattpack init default --harness codex
 ```
 
 Mattpack 只会写入选定的项目根目录。复现旧版本安装结果时，请固定包版本：
 
 ```sh
-npx mattpack@0.1.0 init default --harness codex
+npx @leike0813/mattpack@0.1.0 init default --harness codex
 ```
 
 ## Preset

@@ -12,6 +12,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+const packageManifest = JSON.parse(await readFile(path.join(packageRoot, "package.json"), "utf8")) as unknown;
+if (!isRecord(packageManifest) || typeof packageManifest.name !== "string") {
+  throw new Error("package.json does not contain a valid package name");
+}
+const packageName = packageManifest.name;
+
 async function run(command: string, args: readonly string[], cwd: string): Promise<string> {
   const result = await runFile(command, [...args], {
     cwd,
@@ -69,7 +75,8 @@ try {
   await mkdir(projectRoot);
   const tarball = path.join(temporary, report.filename);
   await run(npm, ["install", "--offline", "--ignore-scripts", "--no-audit", "--no-fund", tarball], installRoot);
-  const cli = path.join(installRoot, "node_modules", "mattpack", "dist", "cli.js");
+  const installedPackageRoot = path.join(installRoot, "node_modules", ...packageName.split("/"));
+  const cli = path.join(installedPackageRoot, "dist", "cli.js");
   const common = ["--dir", projectRoot, "--json"];
 
   const first = parseResult(await run(process.execPath, [cli, "init", "general", "--harness", "codex", "--yes", ...common], installRoot));
@@ -90,7 +97,7 @@ try {
   if (!(await doesNotExist(path.join(projectRoot, ".agents", "skills", "grill-me")))) throw new Error("Packed CLI remove left a managed skill");
   if (!(await doesNotExist(path.join(projectRoot, ".mattpack", "lock.json")))) throw new Error("Packed CLI remove left ownership state");
 
-  const installedLock = JSON.parse(await readFile(path.join(installRoot, "node_modules", "mattpack", "upstream.lock.json"), "utf8")) as unknown;
+  const installedLock = JSON.parse(await readFile(path.join(installedPackageRoot, "upstream.lock.json"), "utf8")) as unknown;
   if (!isRecord(installedLock) || installedLock.schemaVersion !== 1) throw new Error("Installed upstream lock is invalid");
   process.stdout.write("Packed artifact passed offline init, doctor, idempotency, and remove smoke tests.\n");
 } finally {

@@ -17,13 +17,13 @@ Existing project-skill managers such as [skills-manager](https://github.com/xing
 ## Quick start
 
 ```sh
-npx mattpack init default --harness codex
+npx @leike0813/mattpack init default --harness codex
 ```
 
 Mattpack writes only below the selected project root. Pin the package version when reproducing an older installation:
 
 ```sh
-npx mattpack@0.1.0 init default --harness codex
+npx @leike0813/mattpack@0.1.0 init default --harness codex
 ```
 
 ## Presets

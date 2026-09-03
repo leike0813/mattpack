@@ -601,7 +601,7 @@ The README must clearly state:
 - preset meanings and dependency additions;
 - supported harnesses and destination paths;
 - ownership, conflict, backup, update, and removal behavior;
-- how to reproduce an older result with `npx mattpack@<version>`.
+- how to reproduce an older result with `npx @leike0813/mattpack@<version>`.
 
 Maintain `THIRD_PARTY_NOTICES.md` with the bundled `mattpocock/skills` commit and MIT attribution. Mention OpenSpec as a development reference, while making clear that it is not bundled or used at runtime.
 
@@ -639,7 +639,7 @@ Compilation alone is not completion.
 
 Mattpack v1 is ready when:
 
-- `npx mattpack@<version> init` works in a clean project;
+- `npx @leike0813/mattpack@<version> init` works in a clean project;
 - all canonical presets resolve against the pinned snapshot as defined here;
 - dependency additions are complete and visible;
 - prioritized harnesses work through adapters, including shared `.agents/skills`;

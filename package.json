@@ -1,5 +1,5 @@
 {
-  "name": "mattpack",
+  "name": "@leike0813/mattpack",
   "version": "0.1.0",
   "description": "Project-local installer for curated Matt Pocock agent skill presets",
   "license": "MIT",
