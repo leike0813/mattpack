@@ -32,12 +32,14 @@
     "sync:upstream": "pnpm scripts:build && node .scripts-dist/scripts/sync-upstream.js",
     "validate:upstream": "pnpm scripts:build && node .scripts-dist/scripts/validate-upstream.js",
     "docs": "pnpm scripts:build && node .scripts-dist/scripts/generate-readme.js",
-    "docs:check": "pnpm scripts:build && node .scripts-dist/scripts/generate-readme.js --check"
+    "docs:check": "pnpm scripts:build && node .scripts-dist/scripts/generate-readme.js --check",
+    "release:bump": "pnpm run check && pnpm exec bumpp --yes --commit \"chore(release): publish @leike0813/mattpack\" && pnpm run docs && git add README.md README.zh-CN.md && git commit -m \"docs: sync README for release\" && git push"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@inquirer/confirm": "^5.1.21",
     "@types/node": "^20.19.43",
+    "bumpp": "^12.3.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.9.1",
     "typescript": "^5.9.3",
