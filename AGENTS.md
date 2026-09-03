@@ -18,7 +18,7 @@ This file is the product and engineering authority for the repository. When it c
 
 1. **Lightweight by default**
    - Use Node.js 20+ and strict TypeScript.
-   - Prefer Node built-ins and target zero runtime dependencies.
+   - Prefer Node built-ins and keep the published package free of installed runtime dependencies; bundle the Inquirer prompt implementation into the compiled CLI.
    - Ship one npm package and one `mattpack` executable.
    - No GUI, background service, database, plugin host, or remote backend.
 
@@ -81,6 +81,7 @@ Prioritize Claude Code, Codex/shared `.agents`, OpenCode, Pi, and Oh My Pi in th
 
 - Prefer `node:util` `parseArgs`, `node:fs`, `node:path`, and `node:crypto` over runtime libraries.
 - The published npm tarball must include compiled code, catalog data, licenses, and the pinned vendored skill snapshot.
+- Bundle the Inquirer prompt implementation into `dist/cli.js` so package installation and normal operation remain offline-capable.
 - The published package must exclude `references/OpenSpec`.
 
 ## Sources of Truth

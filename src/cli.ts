@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { parseArgs } from "node:util";
-import { createInterface } from "node:readline/promises";
+import path from "node:path";
 
-import { canonicalPreset, CANONICAL_PRESETS, type CanonicalPreset } from "./catalog/presets.js";
+import { canonicalPreset, CANONICAL_PRESETS, PRESETS, type CanonicalPreset } from "./catalog/presets.js";
 import { packageRootFrom } from "./catalog/upstream.js";
 import { applyPlan } from "./core/apply.js";
 import { asMattpackError, MattpackError } from "./core/errors.js";
@@ -19,6 +19,13 @@ import {
 import { readConfig, readPackageVersion } from "./core/state.js";
 import { HARNESS_ADAPTERS, selectHarnesses } from "./harnesses/registry.js";
 import { errorJson, operationData, renderList, renderOperation, successJson } from "./output/render.js";
+import {
+  confirmPlan,
+  isInteractive,
+  isPromptCancellation,
+  selectHarnesses as promptHarnesses,
+  selectPreset
+} from "./output/prompts.js";
 
 type Command = "init" | "inspect" | "list" | "update" | "doctor" | "remove";
 const COMMANDS = new Set<Command>(["init", "inspect", "list", "update", "doctor", "remove"]);
@@ -36,9 +43,10 @@ Usage:
 Options:
   --dir <path>       Project directory
   --harness <id>     Repeatable harness id; use "all" for every harness
-  --yes              Accept the default preset and skip confirmation
+  --yes              Use defaults and approve writes without prompting
   --dry-run          Return the real plan without applying it
   --json             Write one JSON value to stdout
+  --no-color         Disable color output
   --force            Back up and replace conflicting bytes
   --no-deps          Install preset roots without dependencies
   --help              Show help
@@ -54,6 +62,7 @@ interface Parsed {
     yes?: boolean;
     "dry-run"?: boolean;
     json?: boolean;
+    "no-color"?: boolean;
     force?: boolean;
     "no-deps"?: boolean;
     help?: boolean;
@@ -74,6 +83,7 @@ function parse(argv: readonly string[]): Parsed {
         yes: { type: "boolean" },
         "dry-run": { type: "boolean" },
         json: { type: "boolean" },
+        "no-color": { type: "boolean" },
         force: { type: "boolean" },
         "no-deps": { type: "boolean" },
         help: { type: "boolean", short: "h" },
@@ -109,11 +119,11 @@ function parse(argv: readonly string[]): Parsed {
       if (values[key] !== undefined) invalidOptions.push(`--${key}`);
     }
   } else if (command === "remove") {
-    for (const key of ["harness", "yes", "force", "no-deps"] as const) {
+    for (const key of ["harness", "force", "no-deps"] as const) {
       if (values[key] !== undefined) invalidOptions.push(`--${key}`);
     }
   } else if (command === "update") {
-    for (const key of ["harness", "yes", "no-deps"] as const) {
+    for (const key of ["harness", "no-deps"] as const) {
       if (values[key] !== undefined) invalidOptions.push(`--${key}`);
     }
   }
@@ -129,49 +139,73 @@ async function promptChoices(projectRoot: string, parsed: Parsed, persisted?: Aw
 }> {
   let preset = parsed.preset ? canonicalPreset(parsed.preset) : persisted?.preset;
   let harnesses = parsed.values.harness ?? persisted?.harnesses;
-  const canPrompt = Boolean(process.stdin.isTTY && process.stdout.isTTY && !parsed.values.json && !parsed.values.yes);
+  const canPrompt = !parsed.values.json && !parsed.values.yes && isInteractive();
   if (parsed.values.yes && !preset) preset = "default";
-  if (preset && harnesses && harnesses.length > 0) return { preset, harnesses: selectHarnesses(harnesses).map((item) => item.id) };
-  if (!canPrompt) throw new MattpackError("NON_INTERACTIVE_INPUT_REQUIRED", "Preset and harness selection are required");
 
-  const readline = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    if (!preset) {
-      process.stdout.write(`Presets: ${CANONICAL_PRESETS.join(", ")}\n`);
-      const answer = (await readline.question("Preset [default]: ")).trim();
-      preset = canonicalPreset(answer || "default");
+  const promptMissing = parsed.command === "init" || !preset || !harnesses?.length;
+  if (canPrompt && promptMissing && (!parsed.preset || !parsed.values.harness)) {
+    if (parsed.command === "init") {
+      process.stdout.write("\nWelcome to Mattpack\nInstall curated skills into this project.\n\n");
     }
-    if (!harnesses || harnesses.length === 0) {
+    if (!parsed.preset) {
+      preset = await selectPreset(CANONICAL_PRESETS.map((name) => PRESETS[name]), preset ?? "default");
+    }
+    if (!parsed.values.harness) {
       const detected = await detectHarnesses(projectRoot);
       const evidence = new Map(detected.map((entry) => [entry.id, entry.result.evidence]));
-      process.stdout.write("Harnesses:\n");
-      for (const harness of HARNESS_ADAPTERS) {
-        const hint = evidence.get(harness.id);
-        process.stdout.write(`  ${harness.id}${hint ? ` (detected: ${hint.join(", ")})` : ""}\n`);
-      }
-      const answer = (await readline.question("Harness ids (comma-separated): ")).trim();
-      if (!answer) throw new MattpackError("NON_INTERACTIVE_INPUT_REQUIRED", "Select at least one harness");
-      harnesses = answer.split(",").map((item) => item.trim()).filter(Boolean);
+      const configured = new Set(persisted?.harnesses ?? []);
+      harnesses = await promptHarnesses(HARNESS_ADAPTERS.map((harness) => ({
+        id: harness.id,
+        displayName: harness.displayName,
+        root: path.relative(projectRoot, harness.getSkillRoot(projectRoot)).split(path.sep).join("/"),
+        evidence: evidence.get(harness.id) ?? [],
+        configured: configured.has(harness.id)
+      })));
     }
-  } finally {
-    readline.close();
+  }
+  if (!preset || !harnesses?.length) {
+    throw new MattpackError(
+      "NON_INTERACTIVE_INPUT_REQUIRED",
+      "Preset and harness selection are required; pass a preset and at least one --harness"
+    );
   }
   return { preset, harnesses: selectHarnesses(harnesses).map((item) => item.id) };
 }
 
-async function confirm(): Promise<boolean> {
-  const readline = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    return /^(?:y|yes)$/iu.test((await readline.question("Apply this plan? [y/N]: ")).trim());
-  } finally {
-    readline.close();
+function planChanges(result: Awaited<ReturnType<typeof installProject>>): boolean {
+  return result.plan.actions.length > 0 || result.plan.stateNeedsWrite;
+}
+
+async function applyMutation(
+  result: Awaited<ReturnType<typeof installProject>>,
+  parsed: Parsed
+): Promise<boolean> {
+  const json = Boolean(parsed.values.json);
+  const force = Boolean(parsed.values.force);
+  if (result.plan.conflicts.length > 0 && !force) {
+    if (!json) process.stdout.write(renderOperation(result));
+    result.applied = await applyPlan(result.projectRoot, result.plan, false);
+    return true;
   }
+  if (planChanges(result) && !parsed.values.yes) {
+    if (json || !isInteractive()) {
+      throw new MattpackError("NON_INTERACTIVE_INPUT_REQUIRED", `mattpack ${result.command} requires --yes when it will write`);
+    }
+    process.stdout.write(renderOperation(result));
+    if (!(await confirmPlan(result.command === "remove" ? "Remove these managed skills?" : "Apply this plan?"))) {
+      process.stdout.write("Cancelled. No changes were made.\n");
+      return false;
+    }
+  }
+  result.applied = await applyPlan(result.projectRoot, result.plan, force);
+  return true;
 }
 
 async function main(argv = process.argv.slice(2)): Promise<number> {
   const parsed = parse(argv);
+  if (parsed.values["no-color"]) process.env.NO_COLOR = "1";
   const json = Boolean(parsed.values.json);
-  const packageRoot = packageRootFrom();
+  const packageRoot = packageRootFrom(new URL("./catalog/upstream.js", import.meta.url).href);
   if (parsed.values.help) {
     process.stdout.write(json ? successJson("help", process.cwd(), { help: HELP }) : HELP);
     return 0;
@@ -203,14 +237,7 @@ async function main(argv = process.argv.slice(2)): Promise<number> {
       dryRun: true,
       ...(parsed.values.force === undefined ? {} : { force: parsed.values.force })
     });
-    if (!dryRun) {
-      if (json && !parsed.values.yes) throw new MattpackError("NON_INTERACTIVE_INPUT_REQUIRED", "--json mutation requires --yes");
-      if (!json && !parsed.values.yes) {
-        process.stdout.write(renderOperation(result));
-        if (!(await confirm())) return 0;
-      }
-      result.applied = await applyPlan(projectRoot, result.plan, parsed.values.force);
-    }
+    if (!dryRun && !(await applyMutation(result, parsed))) return 0;
     if (parsed.values["no-deps"]) process.stderr.write("Warning: --no-deps may produce an unusable installation.\n");
     process.stdout.write(json ? successJson(parsed.command, projectRoot, operationData(result)) : renderOperation(result));
     return 0;
@@ -221,7 +248,7 @@ async function main(argv = process.argv.slice(2)): Promise<number> {
     result = await updateProject({
       projectRoot,
       packageRoot,
-      ...(parsed.values["dry-run"] === undefined ? {} : { dryRun: parsed.values["dry-run"] }),
+      dryRun: true,
       ...(parsed.values.force === undefined ? {} : { force: parsed.values.force })
     });
   } else if (parsed.command === "doctor") {
@@ -229,9 +256,10 @@ async function main(argv = process.argv.slice(2)): Promise<number> {
   } else {
     result = await removeProject({
       projectRoot,
-      ...(parsed.values["dry-run"] === undefined ? {} : { dryRun: parsed.values["dry-run"] })
+      dryRun: true
     });
   }
+  if (parsed.command !== "doctor" && !parsed.values["dry-run"] && !(await applyMutation(result, parsed))) return 0;
   process.stdout.write(json ? successJson(parsed.command, projectRoot, operationData(result)) : renderOperation(result));
   return result.command === "doctor" && !result.healthy ? 1 : 0;
 }
@@ -240,13 +268,18 @@ const wantsJson = process.argv.includes("--json");
 try {
   process.exitCode = await main();
 } catch (error) {
-  const normalized = asMattpackError(error);
-  if (wantsJson) process.stdout.write(errorJson(normalized));
-  else {
-    process.stderr.write(`Error [${normalized.code}]: ${normalized.message}\n`);
-    if (["INVALID_ARGUMENT", "UNKNOWN_PRESET", "UNKNOWN_HARNESS"].includes(normalized.code)) {
-      process.stderr.write('Run "mattpack --help" for usage.\n');
+  if (isPromptCancellation(error)) {
+    process.stderr.write("Cancelled.\n");
+    process.exitCode = 130;
+  } else {
+    const normalized = asMattpackError(error);
+    if (wantsJson) process.stdout.write(errorJson(normalized));
+    else {
+      process.stderr.write(`Error [${normalized.code}]: ${normalized.message}\n`);
+      if (["INVALID_ARGUMENT", "UNKNOWN_PRESET", "UNKNOWN_HARNESS"].includes(normalized.code)) {
+        process.stderr.write('Run "mattpack --help" for usage.\n');
+      }
     }
+    process.exitCode = normalized.code === "INVALID_ARGUMENT" ? 2 : 1;
   }
-  process.exitCode = normalized.code === "INVALID_ARGUMENT" ? 2 : 1;
 }

@@ -12,7 +12,8 @@
     "mattpack": "dist/cli.js"
   },
   "files": [
-    "dist",
+    "dist/cli.js",
+    "dist/cli.js.map",
     "vendor/mattpocock-skills",
     "README.md",
     "LICENSE",
@@ -20,7 +21,7 @@
     "upstream.lock.json"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node --input-type=module --eval \"import { build } from 'esbuild'; await build({ entryPoints: ['src/cli.ts'], bundle: true, platform: 'node', format: 'esm', target: 'node20', outfile: 'dist/cli.js', sourcemap: true, legalComments: 'eof', banner: { js: '\\\"use strict\\\"; import { createRequire } from \\\"node:module\\\"; const require = createRequire(import.meta.url);' } })\"",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.tests.json --noEmit && tsc -p tsconfig.scripts.json --noEmit",
     "test": "pnpm build && node -e \"require('node:fs').rmSync('test-dist',{recursive:true,force:true})\" && tsc -p tsconfig.tests.json && cd test-dist && node --test",
@@ -34,7 +35,11 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@inquirer/checkbox": "^4.3.2",
+    "@inquirer/confirm": "^5.1.21",
+    "@inquirer/select": "^4.4.2",
     "@types/node": "^20.19.43",
+    "esbuild": "^0.28.2",
     "eslint": "^10.9.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.69.0"

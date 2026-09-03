@@ -40,30 +40,90 @@ export function errorJson(error: MattpackError): string {
   }, null, 2)}\n`;
 }
 
-export function renderOperation(result: OperationResult): string {
+const colorEnabled = (): boolean => Boolean(process.stdout.isTTY && !("NO_COLOR" in process.env));
+const style = (code: number, value: string): string => colorEnabled() ? `\u001B[${code}m${value}\u001B[0m` : value;
+const bold = (value: string): string => style(1, value);
+const green = (value: string): string => style(32, value);
+const yellow = (value: string): string => style(33, value);
+const red = (value: string): string => style(31, value);
+
+function actionLines(plan: ReconciliationPlan): string[] {
+  const lines: string[] = [];
+  for (const [kind, label, symbol] of [
+    ["add", "Add", green("+")],
+    ["replace", "Replace", yellow("~")],
+    ["remove", "Remove", red("-")]
+  ] as const) {
+    const byRoot = new Map<string, string[]>();
+    for (const action of plan.actions.filter((item) => item.kind === kind)) {
+      byRoot.set(action.root, [...(byRoot.get(action.root) ?? []), action.name]);
+    }
+    for (const [root, names] of byRoot) {
+      lines.push(`  ${symbol} ${label} ${root} (${names.length}): ${names.join(", ")}`);
+    }
+  }
+  if (plan.stateNeedsWrite) lines.push("  ~ Update .mattpack/config.json and .mattpack/lock.json");
+  if (lines.length === 0) lines.push("  No changes");
+  if (plan.unchanged.length > 0) lines.push(`  = Keep ${plan.unchanged.length} managed skill(s) unchanged`);
+  return lines;
+}
+
+function issueLines(label: string, issues: ReconciliationPlan["conflicts"], marker: string): string[] {
+  if (issues.length === 0) return [];
+  return [
+    "",
+    bold(`${label} (${issues.length})`),
+    ...issues.map((issue) => `  ${marker} ${issue.code}: ${issue.key} (${issue.paths.join(", ")})`)
+  ];
+}
+
+function renderPlan(result: OperationResult): string {
   const lines = [
-    `${result.command}: ${result.projectRoot}`,
-    `Actions: ${result.plan.actions.length}; unchanged: ${result.plan.unchanged.length}; conflicts: ${result.plan.conflicts.length}; divergences: ${result.plan.divergences.length}`
+    bold(`Mattpack ${result.command} plan`),
+    `Project: ${result.projectRoot}`
   ];
   if (result.resolution) {
-    lines.push(`Preset skills: ${result.resolution.roots.length} roots, ${result.resolution.dependencies.length} dependencies, ${result.resolution.skills.length} total`);
+    lines.push(
+      `Skills: ${result.resolution.roots.length} roots + ${result.resolution.dependencies.length} dependencies = ${result.resolution.skills.length} total`
+    );
   }
-  for (const target of result.targets ?? []) lines.push(`Target ${target.root}: ${target.consumers.join(", ")}`);
-  for (const conflict of result.plan.conflicts) lines.push(`Conflict ${conflict.code}: ${conflict.key} (${conflict.paths.join(", ")})`);
-  for (const divergence of result.plan.divergences) lines.push(`Divergence ${divergence.code}: ${divergence.key} (${divergence.paths.join(", ")})`);
-  if (result.applied) lines.push(result.applied.changed ? "Applied." : "No changes.");
-  if (result.applied?.backupPath) lines.push(`Backup: ${result.applied.backupPath}`);
-  if (result.healthy !== undefined) lines.push(result.healthy ? "Healthy." : "Drift detected.");
+  if (result.targets?.length) {
+    lines.push("Targets:", ...result.targets.map((target) => `  ${target.root} (${target.consumers.join(", ")})`));
+  }
+  lines.push("", bold("Changes"), ...actionLines(result.plan));
+  lines.push(...issueLines("Conflicts", result.plan.conflicts, red("!")));
+  lines.push(...issueLines("Preserved drift", result.plan.divergences, yellow("!")));
+  if (result.command === "inspect") lines.push("", "Inspection only; no files were changed.");
+  return `${lines.join("\n")}\n`;
+}
+
+export function renderOperation(result: OperationResult): string {
+  if (result.healthy !== undefined) {
+    if (result.healthy) return `${green("✓")} ${bold("Mattpack installation is healthy")}\nProject: ${result.projectRoot}\n`;
+    return `${yellow("!")} ${bold("Mattpack drift detected")}\n${renderPlan(result)}\nNext: run mattpack update --dry-run to inspect repairs.\n`;
+  }
+  if (!result.applied) return renderPlan(result);
+  if (!result.applied.changed) return `${green("✓")} ${bold("Already up to date")}\nProject: ${result.projectRoot}\n`;
+
+  const counts = { add: 0, replace: 0, remove: 0 };
+  for (const action of result.plan.actions) counts[action.kind] += 1;
+  const lines = [
+    `${green("✓")} ${bold(`Mattpack ${result.command} complete`)}`,
+    `Project: ${result.projectRoot}`,
+    `Changed: ${counts.add} added, ${counts.replace} replaced, ${counts.remove} removed`
+  ];
+  if (result.plan.divergences.length > 0) lines.push(`Preserved: ${result.plan.divergences.length} drift item(s)`);
+  if (result.applied.backupPath) lines.push(`Backup: ${result.applied.backupPath}`);
   return `${lines.join("\n")}\n`;
 }
 
 export function renderList(result: ListResult): string {
-  const lines = ["Presets:"];
+  const lines = [bold("Presets")];
   for (const preset of result.presets) {
     const aliases = preset.aliases.length > 0 ? ` (${preset.aliases.join(", ")})` : "";
-    lines.push(`  ${preset.name}${aliases}: ${preset.rootCount} roots, ${preset.resolvedCount} resolved — ${preset.purpose}`);
+    lines.push(`  ${preset.name}${aliases}`, `    ${preset.rootCount} roots → ${preset.resolvedCount} installed · ${preset.purpose}`);
   }
-  lines.push("", "Harnesses:");
-  for (const harness of result.harnesses) lines.push(`  ${harness.id}: ${harness.root} — ${harness.displayName}`);
+  lines.push("", bold("Harnesses"));
+  for (const harness of result.harnesses) lines.push(`  ${harness.displayName} (${harness.id})`, `    ${harness.root}`);
   return `${lines.join("\n")}\n`;
 }

@@ -84,7 +84,7 @@ try {
   const secondApplied = secondResult && isRecord(secondResult.applied) ? secondResult.applied : undefined;
   if (secondApplied?.changed !== false) throw new Error("Packed CLI reinstall was not idempotent");
 
-  parseResult(await run(process.execPath, [cli, "remove", ...common], installRoot));
+  parseResult(await run(process.execPath, [cli, "remove", "--yes", ...common], installRoot));
   if (!(await doesNotExist(path.join(projectRoot, ".agents", "skills", "grill-me")))) throw new Error("Packed CLI remove left a managed skill");
   if (!(await doesNotExist(path.join(projectRoot, ".mattpack", "lock.json")))) throw new Error("Packed CLI remove left ownership state");
 

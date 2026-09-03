@@ -51,7 +51,11 @@ describe("CLI", () => {
       assert.equal(updated.code, 0);
       assert.match(updated.stdout, /"changed": false/u);
 
-      const removed = await run(["remove", "--dir", root, "--json"]);
+      const refusedRemove = await run(["remove", "--dir", root, "--json"]);
+      assert.equal(refusedRemove.code, 1);
+      assert.match(refusedRemove.stdout, /NON_INTERACTIVE_INPUT_REQUIRED/u);
+
+      const removed = await run(["remove", "--dir", root, "--yes", "--json"]);
       assert.equal(removed.code, 0);
       assert.equal(json(removed).ok, true);
       await assert.rejects(access(path.join(root, ".mattpack")));
@@ -80,8 +84,39 @@ describe("CLI", () => {
   it("keeps human output semantic and concise", async () => {
     const result = await run(["list"]);
     assert.equal(result.code, 0);
-    assert.match(result.stdout, /Presets:/u);
-    assert.match(result.stdout, /Harnesses:/u);
+    assert.match(result.stdout, /Presets/u);
+    assert.match(result.stdout, /Harnesses/u);
     assert.equal(result.stderr, "");
+  });
+
+  it("plans mutations before requiring non-interactive approval", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "mattpack-cli-confirm-"));
+    try {
+      const init = await run(["init", "general", "--dir", root, "--harness", "codex", "--yes", "--json"]);
+      assert.equal(init.code, 0);
+
+      const update = await run(["update", "--dir", root, "--json"]);
+      assert.equal(update.code, 0);
+      assert.match(update.stdout, /"changed": false/u);
+
+      const missingSkill = path.join(root, ".agents", "skills", "handoff");
+      await rm(missingSkill, { recursive: true });
+      const refusedUpdate = await run(["update", "--dir", root, "--json"]);
+      assert.equal(refusedUpdate.code, 1);
+      assert.match(refusedUpdate.stdout, /NON_INTERACTIVE_INPUT_REQUIRED/u);
+      await assert.rejects(access(missingSkill));
+
+      const approvedUpdate = await run(["update", "--dir", root, "--yes", "--json"]);
+      assert.equal(approvedUpdate.code, 0);
+      await access(missingSkill);
+
+      const removePlan = await run(["remove", "--dir", root, "--dry-run"]);
+      assert.equal(removePlan.code, 0);
+      assert.match(removePlan.stdout, /Mattpack remove plan/u);
+      assert.match(removePlan.stdout, /Remove \.agents\/skills/u);
+      await access(path.join(root, ".mattpack", "lock.json"));
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });

@@ -59,9 +59,11 @@ mattpack doctor
 mattpack remove
 ```
 
-Common options are `--dir <path>`, repeatable `--harness <id>`, `--harness all`, `--yes`, `--dry-run`, `--json`, `--force`, and `--no-deps`. Running `mattpack` without a subcommand in a terminal starts `init default`; non-interactive ambiguity is an error. `inspect` uses the installation planner without writing, `update` reconciles against the snapshot in the running package, and `doctor` reports drift without repairing it.
+Common options are `--dir <path>`, repeatable `--harness <id>`, `--harness all`, `--yes`, `--dry-run`, `--json`, `--no-color`, `--force`, and `--no-deps`. Running `mattpack` without enough input in a terminal opens preset and harness selectors; detected harnesses are pre-selected on first setup. Non-interactive ambiguity is an error. `inspect` uses the installation planner without writing, `update` reconciles against the snapshot in the running package, and `doctor` reports drift without repairing it.
 
-In JSON mode stdout is one structured JSON value. Human diagnostics and the `--no-deps` warning use stderr.
+`init`, `update`, and `remove` show the real plan before interactive writes. Scripts, agents, and JSON mutations must pass `--yes`; dry runs and no-op updates do not require approval. Declining a prompt leaves the project unchanged, while Ctrl+C exits with status 130.
+
+In JSON mode stdout is one structured JSON value. Human diagnostics and the `--no-deps` warning use stderr. Use `--no-color` or `NO_COLOR` for plain human output.
 
 ## Ownership and safety
 
