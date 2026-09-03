@@ -1,0 +1,17 @@
+.agents/
+.claude/
+.codebuddy/
+.kilocode/
+.kimi-code/
+.omp/
+.opencode/
+.pi/
+.qwen/
+
+node_modules/
+dist/
+test-dist/
+.scripts-dist/
+coverage/
+*.tgz
+.mattpack/

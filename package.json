@@ -1,0 +1,42 @@
+{
+  "name": "mattpack",
+  "version": "0.1.0",
+  "description": "Project-local installer for curated Matt Pocock agent skill presets",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@11.10.0",
+  "bin": {
+    "mattpack": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "vendor/mattpocock-skills",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "upstream.lock.json"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.tests.json --noEmit && tsc -p tsconfig.scripts.json --noEmit",
+    "test": "pnpm build && node -e \"require('node:fs').rmSync('test-dist',{recursive:true,force:true})\" && tsc -p tsconfig.tests.json && cd test-dist && node --test",
+    "test:pack": "pnpm build && pnpm scripts:build && node .scripts-dist/scripts/verify-package.js",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:pack && pnpm docs:check",
+    "scripts:build": "node -e \"require('node:fs').rmSync('.scripts-dist',{recursive:true,force:true})\" && tsc -p tsconfig.scripts.json",
+    "sync:upstream": "pnpm scripts:build && node .scripts-dist/scripts/sync-upstream.js",
+    "validate:upstream": "pnpm scripts:build && node .scripts-dist/scripts/validate-upstream.js",
+    "docs": "pnpm scripts:build && node .scripts-dist/scripts/generate-readme.js",
+    "docs:check": "pnpm scripts:build && node .scripts-dist/scripts/generate-readme.js --check"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^20.19.43",
+    "eslint": "^10.9.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.69.0"
+  }
+}

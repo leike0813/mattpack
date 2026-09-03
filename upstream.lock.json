@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "upstreams": {
+    "mattpocock/skills": {
+      "repository": "https://github.com/mattpocock/skills.git",
+      "commit": "6654f6b60cd9d5be8b54c6fafe44346dabeb3b76",
+      "vendorPath": "vendor/mattpocock-skills",
+      "license": "MIT"
+    }
+  }
+}

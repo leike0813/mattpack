@@ -1,0 +1,3 @@
+[submodule "references/OpenSpec"]
+	path = references/OpenSpec
+	url = https://github.com/Fission-AI/OpenSpec.git
