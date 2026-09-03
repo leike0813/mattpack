@@ -16,6 +16,7 @@
     "dist/cli.js.map",
     "vendor/mattpocock-skills",
     "README.md",
+    "README.zh-CN.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
     "upstream.lock.json"

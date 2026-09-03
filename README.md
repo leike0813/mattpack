@@ -1,8 +1,18 @@
 # Mattpack
 
+[中文文档](README.zh-CN.md)
+
 Mattpack is an **unofficial** project-local installer for curated presets from [mattpocock/skills](https://github.com/mattpocock/skills). It is not affiliated with Matt Pocock.
 
 It copies a fixed upstream snapshot bundled in the npm package into the native skill directories used by coding-agent harnesses. Normal commands do not contact GitHub, create global state, run a daemon, require an account or API key, or collect telemetry.
+
+## Why project-local installation
+
+`mattpocock/skills` is a practical set of AI-native development skills. Installing a large skill collection globally makes an agent spend part of its skill catalog budget on those skills for every task. Some harnesses, including Codex, can even run into prompt truncation. Installing skills at project scope and only when a project needs them keeps that catalog local to the work.
+
+The upstream collection contains many separate skills with dependencies between them. Mattpack offers presets for common situations, so users can choose a scenario without working out the dependency graph by hand.
+
+Existing project-skill managers such as [skills-manager](https://github.com/xingkongliang/skills-manager) are GUI applications. Mattpack provides a CLI that fits developer workflows and can be composed into worktree automation.
 
 ## Quick start
 
@@ -93,4 +103,4 @@ pnpm install --frozen-lockfile
 pnpm check
 ```
 
-Regenerate this README with `pnpm run docs`; CI uses `pnpm docs:check` to reject catalog or harness-table drift.
+Regenerate both language versions with `pnpm run docs`; CI uses `pnpm docs:check` to reject catalog, harness-table, or README drift.

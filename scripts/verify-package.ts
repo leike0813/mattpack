@@ -49,6 +49,8 @@ try {
   ));
   for (const required of [
     "dist/cli.js",
+    "README.md",
+    "README.zh-CN.md",
     "upstream.lock.json",
     "vendor/mattpocock-skills/LICENSE",
     "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md"
