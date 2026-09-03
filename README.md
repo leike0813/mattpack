@@ -23,7 +23,7 @@ npx @leike0813/mattpack init --tools codex
 Mattpack writes only below the selected project root. Pin the package version when reproducing an older installation:
 
 ```sh
-npx @leike0813/mattpack@0.1.2 init --tools codex
+npx @leike0813/mattpack@0.1.3 init --tools codex
 ```
 
 ## Presets
