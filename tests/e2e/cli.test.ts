@@ -72,6 +72,19 @@ describe("CLI", () => {
       assert.match(planned.stdout, /Mattpack init plan/u);
       assert.equal(planned.stderr, "");
 
+      const powershell = await run([
+        "init", "--dir", root,
+        "--tools", "codex claude codebuddy opencode kilocode qwen kimi oh-my-pi pi",
+        "--skills", "wayfinder", "--dry-run", "--json"
+      ]);
+      assert.equal(powershell.code, 0);
+      const powershellResult = json(powershell).result as {
+        resolution: { roots: string[] };
+        targets: unknown[];
+      };
+      assert.equal(powershellResult.targets.length, 9);
+      assert.ok(powershellResult.resolution.roots.includes("wayfinder"));
+
       const initialized = await run(["init", "--dir", root, "--tools", "codex,claude", "--yes", "--json"]);
       assert.equal(initialized.code, 0);
       const config = JSON.parse(await readFile(path.join(root, ".mattpack", "config.json"), "utf8")) as {

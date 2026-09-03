@@ -139,7 +139,7 @@ function parse(argv: readonly string[]): Parsed {
 }
 
 function parseIds(value: string, option: "tools" | "skills"): string[] {
-  const ids = value.split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
+  const ids = value.split(/[,\s]+/u).map((item) => item.trim().toLowerCase()).filter(Boolean);
   if (ids.length === 0) throw new MattpackError("INVALID_ARGUMENT", `--${option} requires at least one id`);
   return ids;
 }
