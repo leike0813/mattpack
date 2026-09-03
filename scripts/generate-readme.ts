@@ -8,6 +8,8 @@ import { resolveSkillSet } from "../src/core/dependency-graph.js";
 import { HARNESS_ADAPTERS } from "../src/harnesses/registry.js";
 
 const packageRoot = process.cwd();
+const packageManifest = JSON.parse(await readFile(path.join(packageRoot, "package.json"), "utf8")) as { version: string };
+const packageVersion = packageManifest.version;
 const catalog = await loadUpstreamCatalog(packageRoot);
 const available = new Set(catalog.skills.keys());
 const commit = catalog.lock.upstreams["mattpocock/skills"].commit;
@@ -46,7 +48,7 @@ const lines = [
   "Mattpack writes only below the selected project root. Pin the package version when reproducing an older installation:",
   "",
   "```sh",
-  "npx @leike0813/mattpack@0.1.0 init --tools codex",
+  "npx @leike0813/mattpack@" + packageVersion + " init --tools codex",
   "```",
   "",
   "## Presets",
@@ -80,7 +82,7 @@ const chineseLines = [
   "Mattpack 只会写入选定的项目根目录。复现旧版本安装结果时，请固定包版本：",
   "",
   "```sh",
-  "npx @leike0813/mattpack@0.1.0 init --tools codex",
+  "npx @leike0813/mattpack@" + packageVersion + " init --tools codex",
   "```",
   "",
   "## Preset",
