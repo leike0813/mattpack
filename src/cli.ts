@@ -17,6 +17,7 @@ import {
   updateProject
 } from "./core/service.js";
 import { readConfig, readPackageVersion } from "./core/state.js";
+import type { HarnessPromptOption } from "./output/prompts.js";
 import { HARNESS_ADAPTERS, selectHarnesses } from "./harnesses/registry.js";
 import { errorJson, operationData, renderList, renderOperation, successJson } from "./output/render.js";
 import {
@@ -24,7 +25,8 @@ import {
   isInteractive,
   isPromptCancellation,
   selectHarnesses as promptHarnesses,
-  selectPreset
+  selectPreset,
+  selectPresetAndHarnesses
 } from "./output/prompts.js";
 
 type Command = "init" | "inspect" | "list" | "update" | "doctor" | "remove";
@@ -142,25 +144,39 @@ async function promptChoices(projectRoot: string, parsed: Parsed, persisted?: Aw
   const canPrompt = !parsed.values.json && !parsed.values.yes && isInteractive();
   if (parsed.values.yes && !preset) preset = "default";
 
+  const promptPreset = !parsed.preset;
+  const promptHarness = !parsed.values.harness;
   const promptMissing = parsed.command === "init" || !preset || !harnesses?.length;
-  if (canPrompt && promptMissing && (!parsed.preset || !parsed.values.harness)) {
+  if (canPrompt && promptMissing && (promptPreset || promptHarness)) {
     if (parsed.command === "init") {
       process.stdout.write("\nWelcome to Mattpack\nInstall curated skills into this project.\n\n");
     }
-    if (!parsed.preset) {
-      preset = await selectPreset(CANONICAL_PRESETS.map((name) => PRESETS[name]), preset ?? "default");
-    }
-    if (!parsed.values.harness) {
+    let harnessOptions: HarnessPromptOption[] | undefined;
+    if (promptHarness) {
       const detected = await detectHarnesses(projectRoot);
       const evidence = new Map(detected.map((entry) => [entry.id, entry.result.evidence]));
       const configured = new Set(persisted?.harnesses ?? []);
-      harnesses = await promptHarnesses(HARNESS_ADAPTERS.map((harness) => ({
+      harnessOptions = HARNESS_ADAPTERS.map((harness) => ({
         id: harness.id,
         displayName: harness.displayName,
         root: path.relative(projectRoot, harness.getSkillRoot(projectRoot)).split(path.sep).join("/"),
         evidence: evidence.get(harness.id) ?? [],
         configured: configured.has(harness.id)
-      })));
+      }));
+    }
+    if (promptPreset && promptHarness) {
+      const selected = await selectPresetAndHarnesses(
+        CANONICAL_PRESETS.map((name) => PRESETS[name]),
+        preset ?? "default",
+        harnessOptions ?? []
+      );
+      preset = selected.preset;
+      harnesses = selected.harnesses;
+    } else {
+      if (promptPreset) {
+        preset = await selectPreset(CANONICAL_PRESETS.map((name) => PRESETS[name]), preset ?? "default");
+      }
+      if (promptHarness) harnesses = await promptHarnesses(harnessOptions ?? []);
     }
   }
   if (!preset || !harnesses?.length) {

@@ -41,7 +41,7 @@ export function errorJson(error: MattpackError): string {
 }
 
 const colorEnabled = (): boolean => Boolean(process.stdout.isTTY && !("NO_COLOR" in process.env));
-const style = (code: number, value: string): string => colorEnabled() ? `\u001B[${code}m${value}\u001B[0m` : value;
+export const style = (code: number, value: string): string => colorEnabled() ? `\u001B[${code}m${value}\u001B[0m` : value;
 const bold = (value: string): string => style(1, value);
 const green = (value: string): string => style(32, value);
 const yellow = (value: string): string => style(33, value);
