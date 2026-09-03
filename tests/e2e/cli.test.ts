@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { access, mkdtemp, rm } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
@@ -34,12 +34,12 @@ describe("CLI", () => {
       assert.equal(listed.code, 0);
       assert.equal(json(listed).ok, true);
 
-      const inspected = await run(["dev", "--dir", root, "--harness", "codex", "--dry-run", "--json"]);
+      const inspected = await run(["dev", "--dir", root, "--tools", "codex", "--dry-run", "--json"]);
       assert.equal(inspected.code, 0);
       assert.equal(json(inspected).command, "init");
       await assert.rejects(access(path.join(root, ".mattpack", "lock.json")));
 
-      const initialized = await run(["init", "general", "--dir", root, "--harness", "codex", "--yes", "--json"]);
+      const initialized = await run(["init", "general", "--dir", root, "--tools", "codex", "--yes", "--json"]);
       assert.equal(initialized.code, 0);
       assert.equal(json(initialized).ok, true);
 
@@ -64,6 +64,31 @@ describe("CLI", () => {
     }
   });
 
+  it("uses OpenSpec-style tool selection and defaults an omitted preset", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "mattpack-cli-tools-"));
+    try {
+      const planned = await run(["init", "--dir", root, "--tools", "codex,claude", "--dry-run"]);
+      assert.equal(planned.code, 0);
+      assert.match(planned.stdout, /Mattpack init plan/u);
+      assert.equal(planned.stderr, "");
+
+      const initialized = await run(["init", "--dir", root, "--tools", "codex,claude", "--yes", "--json"]);
+      assert.equal(initialized.code, 0);
+      const config = JSON.parse(await readFile(path.join(root, ".mattpack", "config.json"), "utf8")) as {
+        preset?: unknown;
+        harnesses?: unknown;
+      };
+      assert.equal(config.preset, "default");
+      assert.deepEqual(config.harnesses, ["claude", "codex"]);
+
+      const oldFlag = await run(["init", "default", "--dir", root, "--harness", "codex", "--dry-run", "--json"]);
+      assert.equal(oldFlag.code, 2);
+      assert.match(oldFlag.stdout, /INVALID_ARGUMENT/u);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("returns structured non-interactive and argument errors", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "mattpack-cli-errors-"));
     try {
@@ -76,6 +101,11 @@ describe("CLI", () => {
       assert.equal(invalid.code, 2);
       assert.match(invalid.stdout, /INVALID_ARGUMENT/u);
       json(invalid);
+
+      const unknownTool = await run(["init", "default", "--dir", root, "--tools", "unknown", "--dry-run", "--json"]);
+      assert.equal(unknownTool.code, 1);
+      assert.match(unknownTool.stdout, /UNKNOWN_TOOL/u);
+      json(unknownTool);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -92,7 +122,7 @@ describe("CLI", () => {
   it("plans mutations before requiring non-interactive approval", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "mattpack-cli-confirm-"));
     try {
-      const init = await run(["init", "general", "--dir", root, "--harness", "codex", "--yes", "--json"]);
+      const init = await run(["init", "general", "--dir", root, "--tools", "codex", "--yes", "--json"]);
       assert.equal(init.code, 0);
 
       const update = await run(["update", "--dir", root, "--json"]);

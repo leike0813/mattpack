@@ -73,8 +73,8 @@ export const HARNESS_ADAPTERS: readonly HarnessAdapter[] = DEFINITIONS.map(adapt
 export function harnessById(id: string): HarnessAdapter {
   const found = HARNESS_ADAPTERS.find((candidate) => candidate.id === id || candidate.aliases.includes(id));
   if (!found) {
-    throw new MattpackError("UNKNOWN_HARNESS", `Unknown harness: ${id}`, {
-      harnesses: HARNESS_ADAPTERS.map((candidate) => candidate.id)
+    throw new MattpackError("UNKNOWN_TOOL", `Unknown tool: ${id}`, {
+      tools: HARNESS_ADAPTERS.map((candidate) => candidate.id)
     });
   }
   return found;
@@ -82,7 +82,7 @@ export function harnessById(id: string): HarnessAdapter {
 
 export function selectHarnesses(ids: readonly string[]): HarnessAdapter[] {
   if (ids.includes("all")) {
-    if (ids.length !== 1) throw new MattpackError("INVALID_ARGUMENT", "--harness all cannot be combined with other harnesses");
+    if (ids.length !== 1) throw new MattpackError("INVALID_ARGUMENT", "--tools all cannot be combined with other tools");
     return [...HARNESS_ADAPTERS];
   }
   return [...new Map(ids.map((id) => {

@@ -1,6 +1,6 @@
 {
   "name": "@leike0813/mattpack",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Project-local installer for curated Matt Pocock agent skill presets",
   "license": "MIT",
   "type": "module",
@@ -36,9 +36,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@inquirer/checkbox": "^4.3.2",
     "@inquirer/confirm": "^5.1.21",
-    "@inquirer/select": "^4.4.2",
     "@types/node": "^20.19.43",
     "esbuild": "^0.28.2",
     "eslint": "^10.9.1",

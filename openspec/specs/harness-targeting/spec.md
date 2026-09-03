@@ -10,11 +10,11 @@ Defines project-local harness selection, detection, destinations, and shared-roo
 Mattpack SHALL support `agents`, `codex`, `zed`, `claude`, `opencode`, `pi`, `oh-my-pi`, `gemini`, `cursor`, `github-copilot`, `kimi`, `qwen`, and `kilocode` at their exact AGENTS.md destinations.
 
 #### Scenario: Explicit harness selection
-- **WHEN** one or more harness IDs are supplied
+- **WHEN** one or more harness IDs are supplied through `--tools`
 - **THEN** Mattpack treats that selection as authoritative and targets only their project-local skill roots
 
 #### Scenario: Select every harness
-- **WHEN** `--harness all` is supplied
+- **WHEN** `--tools all` is supplied
 - **THEN** all supported logical harnesses are selected
 
 ### Requirement: Shared physical target deduplication

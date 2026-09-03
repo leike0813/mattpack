@@ -347,7 +347,7 @@ skills/deprecated/**
 node_modules/**
 ```
 
-Do not add an ambiguous preset or flag named only `all`. Use `full`, `everything`, and `--harness all` for distinct meanings.
+Do not add an ambiguous preset or flag named only `all`. Use `full`, `everything`, and `--tools all` for distinct meanings.
 
 ## Dependency Catalog
 
@@ -516,14 +516,14 @@ mattpack doctor
 mattpack remove
 ```
 
-No subcommand in an interactive terminal behaves as `mattpack init default`.
+In an interactive terminal, `mattpack init` opens the two-step preset and tool setup TUI. An explicit preset opens only the tool step. Supplying `--tools` skips the setup TUI, and an omitted preset then resolves to `default`.
 
 Common options:
 
 ```text
 --dir <path>
---harness <id>        repeatable
---harness all         all supported project-local harnesses
+--tools <ids>         comma-separated harness ids
+--tools all           all supported project-local harnesses
 --yes
 --dry-run
 --json

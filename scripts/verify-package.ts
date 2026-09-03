@@ -79,7 +79,7 @@ try {
   const cli = path.join(installedPackageRoot, "dist", "cli.js");
   const common = ["--dir", projectRoot, "--json"];
 
-  const first = parseResult(await run(process.execPath, [cli, "init", "general", "--harness", "codex", "--yes", ...common], installRoot));
+  const first = parseResult(await run(process.execPath, [cli, "init", "general", "--tools", "codex", "--yes", ...common], installRoot));
   const firstResult = isRecord(first.result) ? first.result : undefined;
   const firstApplied = firstResult && isRecord(firstResult.applied) ? firstResult.applied : undefined;
   if (firstApplied?.changed !== true) throw new Error("Packed CLI did not install skills");
@@ -88,7 +88,7 @@ try {
   const doctorResult = isRecord(doctor.result) ? doctor.result : undefined;
   if (doctorResult?.healthy !== true) throw new Error("Packed CLI doctor did not report a healthy install");
 
-  const second = parseResult(await run(process.execPath, [cli, "init", "general", "--harness", "codex", "--yes", ...common], installRoot));
+  const second = parseResult(await run(process.execPath, [cli, "init", "general", "--tools", "codex", "--yes", ...common], installRoot));
   const secondResult = isRecord(second.result) ? second.result : undefined;
   const secondApplied = secondResult && isRecord(secondResult.applied) ? secondResult.applied : undefined;
   if (secondApplied?.changed !== false) throw new Error("Packed CLI reinstall was not idempotent");

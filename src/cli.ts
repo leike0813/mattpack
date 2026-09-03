@@ -24,8 +24,6 @@ import {
   confirmPlan,
   isInteractive,
   isPromptCancellation,
-  selectHarnesses as promptHarnesses,
-  selectPreset,
   selectPresetAndHarnesses
 } from "./output/prompts.js";
 
@@ -44,7 +42,7 @@ Usage:
 
 Options:
   --dir <path>       Project directory
-  --harness <id>     Repeatable harness id; use "all" for every harness
+  --tools <ids>      Comma-separated tool ids; use "all" for every tool
   --yes              Use defaults and approve writes without prompting
   --dry-run          Return the real plan without applying it
   --json             Write one JSON value to stdout
@@ -60,7 +58,7 @@ interface Parsed {
   preset?: string;
   values: {
     dir?: string;
-    harness?: string[];
+    tools?: string;
     yes?: boolean;
     "dry-run"?: boolean;
     json?: boolean;
@@ -81,7 +79,7 @@ function parse(argv: readonly string[]): Parsed {
       strict: true,
       options: {
         dir: { type: "string" },
-        harness: { type: "string", multiple: true },
+        tools: { type: "string" },
         yes: { type: "boolean" },
         "dry-run": { type: "boolean" },
         json: { type: "boolean" },
@@ -113,19 +111,19 @@ function parse(argv: readonly string[]): Parsed {
   const values = parsed.values;
   const invalidOptions: string[] = [];
   if (command === "list") {
-    for (const key of ["dir", "harness", "yes", "dry-run", "force", "no-deps"] as const) {
+    for (const key of ["dir", "tools", "yes", "dry-run", "force", "no-deps"] as const) {
       if (values[key] !== undefined) invalidOptions.push(`--${key}`);
     }
   } else if (command === "doctor") {
-    for (const key of ["harness", "yes", "dry-run", "force", "no-deps"] as const) {
+    for (const key of ["tools", "yes", "dry-run", "force", "no-deps"] as const) {
       if (values[key] !== undefined) invalidOptions.push(`--${key}`);
     }
   } else if (command === "remove") {
-    for (const key of ["harness", "force", "no-deps"] as const) {
+    for (const key of ["tools", "force", "no-deps"] as const) {
       if (values[key] !== undefined) invalidOptions.push(`--${key}`);
     }
   } else if (command === "update") {
-    for (const key of ["harness", "no-deps"] as const) {
+    for (const key of ["tools", "no-deps"] as const) {
       if (values[key] !== undefined) invalidOptions.push(`--${key}`);
     }
   }
@@ -135,19 +133,26 @@ function parse(argv: readonly string[]): Parsed {
   return result;
 }
 
+function parseTools(value: string): string[] {
+  const tools = value.split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
+  if (tools.length === 0) throw new MattpackError("INVALID_ARGUMENT", "--tools requires at least one tool id");
+  return tools;
+}
+
 async function promptChoices(projectRoot: string, parsed: Parsed, persisted?: Awaited<ReturnType<typeof readConfig>>): Promise<{
   preset: CanonicalPreset;
   harnesses: readonly string[];
 }> {
-  let preset = parsed.preset ? canonicalPreset(parsed.preset) : persisted?.preset;
-  let harnesses = parsed.values.harness ?? persisted?.harnesses;
+  const explicitTools = parsed.values.tools !== undefined;
+  let preset = parsed.preset ? canonicalPreset(parsed.preset) : explicitTools ? "default" : persisted?.preset;
+  let harnesses = explicitTools ? parseTools(parsed.values.tools ?? "") : persisted?.harnesses;
   const canPrompt = !parsed.values.json && !parsed.values.yes && isInteractive();
-  if (parsed.values.yes && !preset) preset = "default";
+  if (!canPrompt && !preset) preset = "default";
 
   const promptPreset = !parsed.preset;
-  const promptHarness = !parsed.values.harness;
+  const promptHarness = !explicitTools;
   const promptMissing = parsed.command === "init" || !preset || !harnesses?.length;
-  if (canPrompt && promptMissing && (promptPreset || promptHarness)) {
+  if (canPrompt && promptMissing && promptHarness) {
     if (parsed.command === "init") {
       process.stdout.write("\nWelcome to Mattpack\nInstall curated skills into this project.\n\n");
     }
@@ -164,25 +169,19 @@ async function promptChoices(projectRoot: string, parsed: Parsed, persisted?: Aw
         configured: configured.has(harness.id)
       }));
     }
-    if (promptPreset && promptHarness) {
-      const selected = await selectPresetAndHarnesses(
-        CANONICAL_PRESETS.map((name) => PRESETS[name]),
-        preset ?? "default",
-        harnessOptions ?? []
-      );
-      preset = selected.preset;
-      harnesses = selected.harnesses;
-    } else {
-      if (promptPreset) {
-        preset = await selectPreset(CANONICAL_PRESETS.map((name) => PRESETS[name]), preset ?? "default");
-      }
-      if (promptHarness) harnesses = await promptHarnesses(harnessOptions ?? []);
-    }
+    const selected = await selectPresetAndHarnesses(
+      CANONICAL_PRESETS.map((name) => PRESETS[name]),
+      preset ?? "default",
+      harnessOptions ?? [],
+      promptPreset
+    );
+    preset = selected.preset;
+    harnesses = selected.harnesses;
   }
   if (!preset || !harnesses?.length) {
     throw new MattpackError(
       "NON_INTERACTIVE_INPUT_REQUIRED",
-      "Preset and harness selection are required; pass a preset and at least one --harness"
+      "Tool selection is required; pass --tools all or a comma-separated list of tool ids"
     );
   }
   return { preset, harnesses: selectHarnesses(harnesses).map((item) => item.id) };
@@ -292,7 +291,7 @@ try {
     if (wantsJson) process.stdout.write(errorJson(normalized));
     else {
       process.stderr.write(`Error [${normalized.code}]: ${normalized.message}\n`);
-      if (["INVALID_ARGUMENT", "UNKNOWN_PRESET", "UNKNOWN_HARNESS"].includes(normalized.code)) {
+      if (["INVALID_ARGUMENT", "UNKNOWN_PRESET", "UNKNOWN_TOOL"].includes(normalized.code)) {
         process.stderr.write('Run "mattpack --help" for usage.\n');
       }
     }

@@ -17,13 +17,13 @@ Existing project-skill managers such as [skills-manager](https://github.com/xing
 ## Quick start
 
 ```sh
-npx @leike0813/mattpack init default --harness codex
+npx @leike0813/mattpack init --tools codex
 ```
 
 Mattpack writes only below the selected project root. Pin the package version when reproducing an older installation:
 
 ```sh
-npx @leike0813/mattpack@0.1.0 init default --harness codex
+npx @leike0813/mattpack@0.1.0 init --tools codex
 ```
 
 ## Presets
@@ -56,7 +56,7 @@ A preset selects roots. Mattpack recursively adds declared `requires` and `setup
 | `qwen` | `.qwen/skills` |
 | `kilocode` | `.kilocode/skills` |
 
-`agents`, `codex`, and `zed` share `.agents/skills`; selecting them together writes one physical tree and records every logical consumer. Detection is advisory, while an explicit `--harness` selection wins.
+`agents`, `codex`, and `zed` share `.agents/skills`; selecting them together writes one physical tree and records every logical consumer. Detection is advisory, while an explicit `--tools` selection wins.
 
 ## Commands
 
@@ -69,7 +69,7 @@ mattpack doctor
 mattpack remove
 ```
 
-Common options are `--dir <path>`, repeatable `--harness <id>`, `--harness all`, `--yes`, `--dry-run`, `--json`, `--no-color`, `--force`, and `--no-deps`. Running `mattpack` without enough input in a terminal opens preset and harness selectors; detected harnesses are pre-selected on first setup. Non-interactive ambiguity is an error. `inspect` uses the installation planner without writing, `update` reconciles against the snapshot in the running package, and `doctor` reports drift without repairing it.
+Common options are `--dir <path>`, `--tools <comma-separated ids>`, `--tools all`, `--yes`, `--dry-run`, `--json`, `--no-color`, `--force`, and `--no-deps`. Interactive `mattpack init` opens the two-step preset and tool setup TUI; an explicit preset starts at the tool step. Supplying `--tools` skips the setup TUI, and an omitted preset then defaults to `default`. Detected harnesses are pre-selected on first setup. Non-interactive ambiguity is an error. `inspect` uses the installation planner without writing, `update` reconciles against the snapshot in the running package, and `doctor` reports drift without repairing it.
 
 `init`, `update`, and `remove` show the real plan before interactive writes. Scripts, agents, and JSON mutations must pass `--yes`; dry runs and no-op updates do not require approval. Declining a prompt leaves the project unchanged, while Ctrl+C exits with status 130.
 

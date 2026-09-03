@@ -57,6 +57,7 @@ function exitPromptError(): Error {
 
 function renderSetupPrompt(
   step: 0 | 1,
+  presetSelectable: boolean,
   presets: readonly PresetDefinition[],
   presetIndex: number,
   harnessChoices: readonly HarnessPromptChoice[],
@@ -65,8 +66,8 @@ function renderSetupPrompt(
   errorMessage: string | undefined
 ): number {
   const steps = step === 0
-    ? `${style(36, "[1 Preset]")} → ${style(2, "2 Harnesses")}`
-    : `${style(2, "1 Preset")} → ${style(36, "[2 Harnesses]")}`;
+    ? `${style(36, "[1 Preset]")} → ${style(2, "2 Tools")}`
+    : `${style(2, "1 Preset")} → ${style(36, "[2 Tools]")}`;
   const terminalWidth = process.stdout.columns ?? 80;
   const presetColumnWidth = Math.max(0, ...presets.map((preset) => preset.name.length)) + 3;
   const presetDescriptionWidth = Math.max(0, ...presets.map((preset) => preset.purpose.length));
@@ -98,13 +99,15 @@ function renderSetupPrompt(
     });
   const instructions = step === 0
     ? "↑↓ navigate · → next · Enter continue"
-    : "↑↓ navigate · Space toggle · ← back · Enter submit";
+    : presetSelectable
+      ? "↑↓ navigate · Space toggle · ← back · Enter submit"
+      : "↑↓ navigate · Space toggle · Enter submit";
   const lines = [
     "",
     `${style(34, "?")} ${style(1, "Mattpack setup")}`,
-    steps,
+    ...(presetSelectable ? [steps] : []),
     "",
-    style(1, step === 0 ? "Select a preset" : "Select agent harnesses"),
+    style(1, step === 0 ? "Select a preset" : "Select agent tools"),
     ...choices,
     ...(step === 0 && narrowPresetLayout && selectedPreset ? ["", style(36, selectedPreset.purpose)] : []),
     ...(step === 1 && narrowHarnessLayout && selectedHarness ? ["", style(36, selectedHarness.description)] : []),
@@ -119,13 +122,14 @@ function renderSetupPrompt(
 export async function selectPresetAndHarnesses(
   presets: readonly PresetDefinition[],
   initial: CanonicalPreset,
-  options: readonly HarnessPromptOption[]
+  options: readonly HarnessPromptOption[],
+  presetSelectable = true
 ): Promise<PresetAndHarnessPromptResult> {
   const harnessChoices = harnessPromptChoices(options);
   const selectedHarnesses = new Set(
     harnessChoices.filter((choice) => choice.checked).map((choice) => choice.value)
   );
-  let step: 0 | 1 = 0;
+  let step: 0 | 1 = presetSelectable ? 0 : 1;
   let presetIndex = Math.max(0, presets.findIndex((preset) => preset.name === initial));
   let harnessIndex = 0;
   let errorMessage: string | undefined;
@@ -143,6 +147,7 @@ export async function selectPresetAndHarnesses(
       if (!initial && renderedLines > 0) process.stdout.write(`\x1b[${renderedLines}A\x1b[0J`);
       renderedLines = renderSetupPrompt(
         step,
+        presetSelectable,
         presets,
         presetIndex,
         harnessChoices,
@@ -168,7 +173,7 @@ export async function selectPresetAndHarnesses(
         render();
         return;
       }
-      if (key.name === "left" && step === 1) {
+      if (presetSelectable && key.name === "left" && step === 1) {
         step = 0;
         errorMessage = undefined;
         render();
@@ -198,7 +203,7 @@ export async function selectPresetAndHarnesses(
         return;
       }
       if (selectedHarnesses.size === 0) {
-        errorMessage = "Select at least one harness.";
+        errorMessage = "Select at least one tool.";
         render();
         return;
       }
@@ -222,34 +227,6 @@ export async function selectPresetAndHarnesses(
     process.stdin.resume();
     process.stdin.on("keypress", onKeypress);
     render(true);
-  });
-}
-
-export async function selectPreset(
-  presets: readonly PresetDefinition[],
-  initial: CanonicalPreset
-): Promise<CanonicalPreset> {
-  const { default: select } = await import("@inquirer/select");
-  return select({
-    message: "Select a preset",
-    choices: presets.map((preset) => ({
-      name: `${preset.name} — ${preset.purpose}`,
-      value: preset.name,
-      short: preset.name
-    })),
-    default: initial,
-    loop: false
-  });
-}
-
-export async function selectHarnesses(options: readonly HarnessPromptOption[]): Promise<readonly string[]> {
-  const { default: checkbox } = await import("@inquirer/checkbox");
-  return checkbox({
-    message: "Select agent harnesses",
-    choices: harnessPromptChoices(options),
-    pageSize: 13,
-    loop: false,
-    required: true
   });
 }
 

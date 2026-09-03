@@ -17,13 +17,13 @@ Mattpack 是一个非官方的项目级安装器，用于从 [mattpocock/skills]
 ## 快速开始
 
 ```sh
-npx @leike0813/mattpack init default --harness codex
+npx @leike0813/mattpack init --tools codex
 ```
 
 Mattpack 只会写入选定的项目根目录。复现旧版本安装结果时，请固定包版本：
 
 ```sh
-npx @leike0813/mattpack@0.1.0 init default --harness codex
+npx @leike0813/mattpack@0.1.0 init --tools codex
 ```
 
 ## Preset
@@ -56,7 +56,7 @@ Preset 选择 root。Mattpack 会递归加入声明为 `requires` 和 `setupComp
 | `qwen` | `.qwen/skills` |
 | `kilocode` | `.kilocode/skills` |
 
-`agents`、`codex` 和 `zed` 共用 `.agents/skills`。同时选择它们时只写入一棵物理目录，并记录所有逻辑消费者。检测结果只作建议，显式传入的 `--harness` 优先。
+`agents`、`codex` 和 `zed` 共用 `.agents/skills`。同时选择它们时只写入一棵物理目录，并记录所有逻辑消费者。检测结果只作建议，显式传入的 `--tools` 优先。
 
 ## 命令
 
@@ -69,7 +69,7 @@ mattpack doctor
 mattpack remove
 ```
 
-常用选项包括 `--dir <path>`、可重复的 `--harness <id>`、`--harness all`、`--yes`、`--dry-run`、`--json`、`--no-color`、`--force` 和 `--no-deps`。在终端中运行 `mattpack` 且输入不足时，会打开 preset 和 harness 选择器；首次安装会预选检测到的 harness。非交互环境下缺少必要输入会报错。`inspect` 使用真实安装规划器但不会写入，`update` 根据当前运行包中的快照同步，`doctor` 只报告漂移而不会自动修复。
+常用选项包括 `--dir <path>`、`--tools <逗号分隔的 id>`、`--tools all`、`--yes`、`--dry-run`、`--json`、`--no-color`、`--force` 和 `--no-deps`。交互式 `mattpack init` 会打开 preset 和 tool 两步设置 TUI；显式传入 preset 时直接从 tool 步开始。传入 `--tools` 会跳过设置 TUI，此时未提供 preset 就默认使用 `default`。首次安装会预选检测到的 harness。非交互环境下缺少必要输入会报错。`inspect` 使用真实安装规划器但不会写入，`update` 根据当前运行包中的快照同步，`doctor` 只报告漂移而不会自动修复。
 
 `init`、`update` 和 `remove` 在交互式写入前会展示真实计划。脚本、agent 和 JSON 写入必须传入 `--yes`；dry-run 和无变化的 update 不需要确认。拒绝确认不会修改项目，Ctrl+C 会以状态码 130 退出。
 
