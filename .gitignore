@@ -1,8 +1,10 @@
 .claude/
+.codex/
 .codebuddy/
 .kilocode/
 .kimi-code/
-.omp/
+.omp/*
+!.omp/config.yml
 .opencode/
 .pi/
 .qwen/
@@ -25,5 +27,6 @@ coverage/
 !.agents/skills/matt-skills-monitor/
 !.agents/skills/matt-skills-monitor/**
 
-.codex/
 var/matt-skills-monitor/
+
+.mcp.json

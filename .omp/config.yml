@@ -1,0 +1,6 @@
+modelRoles:
+  default: "minimax-code-cn/MiniMax-M3.1-Flash-Preview"
+  task: "minimax-code-cn/MiniMax-M3.1-Flash-Preview"
+  smol: "minimax-code-cn/MiniMax-M3.1-Flash-Preview"
+  slow: "minimax-code-cn/MiniMax-M3.1-Flash-Preview"
+defaultThinkingLevel: high

@@ -28,8 +28,10 @@ allowlist 不能自动扩大。删除已消失的 root 和有明确证据的名�
 README、CHANGELOG、THIRD_PARTY_NOTICES、AGENTS.md 中当前快照事实。
 对授权范围外的产品决策或不可解释的语义变化，以 blocked 结束并留证据。
 
-Orca coordinator 配置为 minimax-cn/MiniMax-M3.1-Flash-Preview/high。
-Native workers 使用已有角色配置。需要委派时先说明任务及模型，明确各自文件
+Orca 使用 OMP 宿主，coordinator 由实际 worktree 的 `.omp/config.yml` 配置为
+minimax-code-cn/MiniMax-M3.1-Flash-Preview/high。Native workers 和独立 reviewer
+通过同一配置中的 `task`、`smol`、`slow` 模型角色使用该模型，委派前核对所选
+agent 的模型角色和实际解析结果。需要委派时先说明任务及模型，明确各自文件
 所有权、输入、验收和停止条件。worker 停止后才能最终验证及提交。
 能够委派时使用独立 reviewer 检查完整变更；没有 native 委派接口时保留 draft，
 以 blocked 结束并说明缺少独立审查，不能声称已通过审查。

@@ -10,8 +10,9 @@
 
 | 项目 | 配置 |
 |---|---|
-| Orca provider | codex |
-| Coordinator | minimax-cn/MiniMax-M3.1-Flash-Preview |
+| Orca provider | omp |
+| Coordinator | minimax-code-cn/MiniMax-M3.1-Flash-Preview |
+| Native workers / reviewer | `task`、`smol`、`slow` 模型角色绑定同一模型 |
 | Reasoning | high |
 | Worktree | 固定独立目录，existing workspace |
 | Session | 每次 fresh session |
@@ -19,21 +20,27 @@
 | Missed run grace | 60 分钟 |
 | Initial state | disabled |
 
-在该 worktree 的 ignored `.codex/config.toml` 中设置：
+在实际运行 worktree 的 `.omp/config.yml` 中设置：
 
-```toml
-model = "minimax-cn/MiniMax-M3.1-Flash-Preview"
-model_reasoning_effort = "high"
+```yaml
+modelRoles:
+  default: "minimax-code-cn/MiniMax-M3.1-Flash-Preview"
+  task: "minimax-code-cn/MiniMax-M3.1-Flash-Preview"
+  smol: "minimax-code-cn/MiniMax-M3.1-Flash-Preview"
+  slow: "minimax-code-cn/MiniMax-M3.1-Flash-Preview"
+defaultThinkingLevel: high
 ```
 
-沿用机器上已配置的 provider 和认证，不在仓库存储凭据。Native subagent 使用已有角色配置；只有带明确所有权和验收边界的任务才委派，最终独立审查及验收由 coordinator 负责。
+OMP 只加载当前 worktree 的项目配置，不沿父目录查找。`--model` 启动参数可以覆盖默认模型；在专用 worktree 运行 `omp config get modelRoles`，并核对实际启动命令。仓库只保留 `.omp/config.yml`，其他 OMP 本机文件保持 ignored。
+
+沿用机器上已配置的 provider 和认证，不在仓库存储凭据。OMP 的原生 `task` 工具通过 agent 定义及模型角色选择模型：内置 task 使用 `@task`，scout 使用 `@smol`，reviewer 使用 `@slow`。委派前核对所选 agent 的角色和实际解析结果均为 `minimax-code-cn/MiniMax-M3.1-Flash-Preview`；只有带明确所有权和验收边界的任务才委派，最终独立审查及验收由 coordinator 负责。
 
 注册参数示例（把 workspace selector 换成该仓库的专用 worktree；本机可执行文件也可能叫 `orca-ide`）：
 
 ```sh
 orca automations create --name "Matt skills maintenance" \
   --trigger daily --time 02:00 --timezone Asia/Shanghai \
-  --provider codex --workspace "<monitor-worktree-selector>" \
+  --provider omp --workspace "<monitor-worktree-selector>" \
   --prompt "执行 matt-skills-monitor skill，使用默认 origin/main 基线，完成审计、验证、draft PR 和结构化报告。" \
   --disabled --fresh-session --missed-run-grace-minutes 60 --json
 ```
@@ -73,7 +80,7 @@ stdout 是一个 JSON envelope：成功为 `{ok:true,result:...}`，失败为 `{
 
 保持 task disabled，手动运行一次并检查：
 
-1. 实际协调模型及 reasoning，与 worktree 配置一致；
+1. 实际宿主为 OMP，协调模型及 reasoning 与 worktree 配置一致，原生子代理按配置使用同一模型；
 2. 返回完整 pinned/target SHA，报告使用本次固定的观察结果；
 3. noop 时没有源同步、额外 commit、push 或 PR；
 4. latest.json outcome 正确，status 没有遗留活跃锁；
@@ -81,10 +88,11 @@ stdout 是一个 JSON envelope：成功为 `{ok:true,result:...}`，失败为 `{
 
 尚未合并的 feature 只在首次验收用 feature commit 作为 base-ref，随后把 prompt 恢复为默认 origin/main。Feature PR 合并前不能启用默认调度；合并后维护者检查专用 worktree 干净且基线包含本功能，再手动启用。验收报告不能用脚本 fixture 测试代替真实 Orca 运行。
 
-2026-10-08 的真实 fresh-session 验收使用 feature commit
-`2b997fa072603a63b454bc9ad9d5db4728630f6e`。实际协调模型为指定的
-MiniMax-M3.1-Flash-Preview/high；单次观察返回的 pin 和 target 均为
-`b0618bc436ad893b3c5e84e55fba86586d34a404`，结果为 noop，
-finish 后锁释放且 worktree 干净。随后恢复 origin/main prompt，
-保留 disabled、02:00 Asia/Shanghai 和 fresh session 设置。
+本机任务已启用，使用 02:00 Asia/Shanghai、fresh session 和 60 分钟宽限。
+注册与验收证据保存在专用 worktree 的 ignored `registration.json`；
+更换宿主或模型后核对配置并手动验收，保留原调度参数。
+2026-10-08 的 OMP fresh-session 验收使用 origin/main 基线，实际协调模型为
+`minimax-code-cn/MiniMax-M3.1-Flash-Preview/high`。单次观察的上游 SHA 与 pin
+相同，结果为 noop；报告写入后锁已释放，worktree 干净。只读原生 scout 验收
+也使用该模型，其会话记录确认未发生模型回退。
 变化后的完整更新/审查/PR 分支通过 Git fixture 测试验证，尚未触发真实上游更新。
