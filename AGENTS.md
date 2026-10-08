@@ -406,56 +406,15 @@ interface HarnessAdapter {
 
 Keep preset resolution, dependency closure, ownership, copying, and conflict handling outside adapters.
 
-Verified project-local mappings:
-
-| ID | Skill root |
-|---|---|
-| `agents` | `.agents/skills` |
-| `amazon-q` | `.amazonq/skills` |
-| `antigravity` | `.agents/skills` |
-| `auggie` | `.augment/skills` |
-| `bob` | `.bob/skills` |
-| `claude` | `.claude/skills` |
-| `cline` | `.cline/skills` |
-| `codeartsagent` | `.codeartsdoer/skills` |
-| `codebuddy` | `.codebuddy/skills` |
-| `codex` | `.agents/skills` |
-| `command-code` | `.commandcode/skills` |
-| `continue` | `.continue/skills` |
-| `costrict` | `.cospec/skills` |
-| `crush` | `.crush/skills` |
-| `cursor` | `.cursor/skills` |
-| `devin` | `.devin/skills` |
-| `factory` | `.factory/skills` |
-| `forgecode` | `.forge/skills` |
-| `gemini` | `.gemini/skills` |
-| `github-copilot` | `.github/skills` |
-| `hermes` | `.hermes/skills` |
-| `iflow` | `.iflow/skills` |
-| `junie` | `.junie/skills` |
-| `kilocode` | `.kilocode/skills` |
-| `kimi` | `.kimi-code/skills` |
-| `kiro` | `.kiro/skills` |
-| `lingma` | `.lingma/skills` |
-| `oh-my-pi` | `.omp/skills` |
-| `opencode` | `.opencode/skills` |
-| `pi` | `.pi/skills` |
-| `qoder` | `.qoder/skills` |
-| `qwen` | `.qwen/skills` |
-| `roocode` | `.roo/skills` |
-| `rovodev` | `.rovodev/skills` |
-| `trae` | `.trae/skills` |
-| `vibe` | `.vibe/skills` |
-| `zcode` | `.zcode/skills` |
-| `zed` | `.agents/skills` |
+The registry is the source of truth for project-local mappings. Generate the public tables with `pnpm run docs`. Read [docs/harness-audit.md](docs/harness-audit.md) when adding, correcting, or retiring a target; it records evidence and surface applicability.
 
 Rules:
 
-- The registry must cover every canonical tool in the pinned OpenSpec reference with a verified project-local skill target. Global-only targets and compatibility aliases are unsupported.
+- Use the pinned OpenSpec reference as a baseline; reviewed official documentation or source may correct or retire a stale mapping and add verified targets. Global-only targets and compatibility aliases are unsupported.
 - A v1 adapter must resolve beneath the project root. Global-only harness targets are unsupported.
 - Detection is advisory; explicit user selection is authoritative.
 - Never guess a target path by analogy. Verify it against official documentation or the pinned OpenSpec reference and add fixture tests.
-- If several logical harnesses resolve to one physical root, write one tree and record all consumers. In particular, `agents`, `antigravity`, `codex`, and `zed` share `.agents/skills`.
+- If several logical harnesses resolve to one physical root, write one tree and record all consumers. Shared roots include `.agents/skills` and `.roo/skills`.
 - Preserve original skill names and directory structure:
 
 ```text
@@ -638,6 +597,14 @@ The README must clearly state:
 Maintain `THIRD_PARTY_NOTICES.md` with the bundled `mattpocock/skills` commit and MIT attribution. Mention OpenSpec as a development reference, while making clear that it is not bundled or used at runtime.
 
 ## Agent Workflow
+
+### Scheduled Matt skills maintenance
+
+The project owner authorizes the `matt-skills-monitor` skill to audit the observed `mattpocock/skills@main` SHA, update the snapshot/catalog/provenance/tests, commit and push its maintenance branch normally, and create or update a draft PR. Reviewed upstream removals, renames and dependency changes are within this authority; `default` and `general` remain curated allowlists.
+
+Run in a dedicated clean linked worktree under a whole-run repository lock. The coordinator model is `minimax-cn/MiniMax-M3.1-Flash-Preview` with high reasoning; bounded native workers use configured roles. Orca registration and local model configuration are covered in [docs/automations.md](docs/automations.md). The schedule remains disabled until manually enabled after merge.
+
+Maintenance must preserve unrelated files and offline consumer operation. It cannot merge, publish npm, change package versions, install dependencies, advance the OpenSpec pin, force-push, reset user work or execute upstream scripts. Unresolved semantic or license changes produce a blocked report. Read [.agents/skills/matt-skills-monitor/SKILL.md](.agents/skills/matt-skills-monitor/SKILL.md) before starting or recovering a run.
 
 Before changing code:
 

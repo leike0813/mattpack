@@ -58,6 +58,12 @@ function extraFiles(existing: ExistingSkill, prior: ManagedSkill): string[] {
   return existing.files.filter((file) => !managed.has(file.path)).map((file) => file.path).sort();
 }
 
+function removalPreservation(existing: ExistingSkill, prior: ManagedSkill): { changed: string[]; preserved: string[] } {
+  const changed = [...new Set([...modifiedFiles(existing, prior), ...extraFiles(existing, prior)])].sort();
+  const currentPaths = new Set(existing.files.map((file) => file.path));
+  return { changed, preserved: changed.filter((file) => currentPaths.has(file)) };
+}
+
 function desiredMatches(existing: ExistingSkill, desired: DesiredSkill): boolean {
   const current = fileMap(existing.files);
   return desired.files.every((file) => current.get(file.path) === file.sha256);
@@ -134,8 +140,8 @@ export function planInstall(input: {
       divergences.push({ code: "INVALID_OWNERSHIP", key, paths: [key] });
       continue;
     }
-    const preserved = [...new Set([...modifiedFiles(existing, prior), ...extraFiles(existing, prior)])].sort();
-    if (preserved.length > 0) divergences.push({ code: "LOCAL_MODIFICATION", key, paths: preserved });
+    const { changed, preserved } = removalPreservation(existing, prior);
+    if (changed.length > 0) divergences.push({ code: "LOCAL_MODIFICATION", key, paths: changed });
     actions.push({ kind: "remove", key, root: prior.root, name: prior.name, expected: existing, preserveFiles: preserved });
   }
 
@@ -170,8 +176,8 @@ export function planRemove(input: {
       divergences.push({ code: "INVALID_OWNERSHIP", key, paths: [key] });
       continue;
     }
-    const preserved = [...new Set([...modifiedFiles(existing, prior), ...extraFiles(existing, prior)])].sort();
-    if (preserved.length > 0) divergences.push({ code: "LOCAL_MODIFICATION", key, paths: preserved });
+    const { changed, preserved } = removalPreservation(existing, prior);
+    if (changed.length > 0) divergences.push({ code: "LOCAL_MODIFICATION", key, paths: changed });
     actions.push({ kind: "remove", key, root: prior.root, name: prior.name, expected: existing, preserveFiles: preserved });
   }
   return {

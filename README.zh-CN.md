@@ -43,45 +43,62 @@ Preset 选择 root。可以通过 `--skills <逗号分隔的 id>` 或交互式 s
 | Harness | 项目级 skill 目录 |
 |---|---|
 | `agents` | `.agents/skills` |
-| `amazon-q` | `.amazonq/skills` |
+| `amp` | `.agents/skills` |
 | `antigravity` | `.agents/skills` |
+| `autohand` | `.autohand/skills` |
 | `auggie` | `.augment/skills` |
 | `bob` | `.bob/skills` |
 | `claude` | `.claude/skills` |
 | `cline` | `.cline/skills` |
+| `codebuff` | `.agents/skills` |
 | `codeartsagent` | `.codeartsdoer/skills` |
 | `codebuddy` | `.codebuddy/skills` |
 | `codex` | `.agents/skills` |
 | `command-code` | `.commandcode/skills` |
 | `continue` | `.continue/skills` |
-| `costrict` | `.cospec/skills` |
+| `costrict` | `.costrict/skills` |
 | `crush` | `.crush/skills` |
 | `cursor` | `.cursor/skills` |
+| `deep-agents` | `.deepagents/skills` |
+| `deepseek-harness` | `.dsh/skills` |
 | `devin` | `.devin/skills` |
 | `factory` | `.factory/skills` |
 | `forgecode` | `.forge/skills` |
 | `gemini` | `.gemini/skills` |
 | `github-copilot` | `.github/skills` |
+| `goose` | `.goose/skills` |
+| `grok` | `.grok/skills` |
 | `hermes` | `.hermes/skills` |
 | `iflow` | `.iflow/skills` |
 | `junie` | `.junie/skills` |
-| `kilocode` | `.kilocode/skills` |
+| `kilocode` | `.kilo/skills` |
 | `kimi` | `.kimi-code/skills` |
 | `kiro` | `.kiro/skills` |
 | `lingma` | `.lingma/skills` |
+| `minimax-code` | `.minimax/skills` |
+| `openhands` | `.openhands/skills` |
 | `oh-my-pi` | `.omp/skills` |
 | `opencode` | `.opencode/skills` |
 | `pi` | `.pi/skills` |
+| `prime-agent` | `.prime/agent/skills` |
 | `qoder` | `.qoder/skills` |
 | `qwen` | `.qwen/skills` |
+| `replit-agent` | `.agents/skills` |
 | `roocode` | `.roo/skills` |
 | `rovodev` | `.rovodev/skills` |
+| `sourcecraft-code-assistant` | `.codeassistant/skills` |
 | `trae` | `.trae/skills` |
 | `vibe` | `.vibe/skills` |
+| `warp` | `.agents/skills` |
 | `zcode` | `.zcode/skills` |
 | `zed` | `.agents/skills` |
+| `zoo-code` | `.roo/skills` |
 
-`agents`、`antigravity`、`codex` 和 `zed` 共用 `.agents/skills`。同时选择它们时只写入一棵物理目录，并记录所有逻辑消费者。检测结果只作建议，显式传入的 `--tools` 优先。
+共用目录的 harness（包括 `.agents/skills`，以及 Roo/Zoo Code 的 `.roo/skills`）只写入一棵物理目录，并记录所有逻辑消费者。检测结果只作建议，显式传入的 `--tools` 优先。已核实的产品形态见 [harness 审计依据](docs/harness-audit.md)。
+
+CoStrict 的目标改为 `.costrict/skills`，Kilo Code 改为 `.kilo/skills`。先用 `update --dry-run` 查看计划：未修改的受管理文件通过现有规划器迁移，旧目录中的本地修改和额外文件会保留并报告。新目录存在不属于 Mattpack 的冲突时，先处理冲突再更新。
+
+`amazon-q` 已移除，因为审查过的 Q CLI 没有原生 skills 目标；IDE 形态仍未核实。保存了该选择的项目在 update/doctor 写入前会收到 `UNKNOWN_TOOL`。可用 `init --tools <ids> --yes` 重新选择支持的工具，或用 `remove --yes` 根据旧 lock 安全卸载。
 
 ## 命令
 
@@ -137,3 +154,5 @@ pnpm check
 ```
 
 使用 `pnpm run docs` 同时生成中英文 README。CI 使用 `pnpm docs:check` 检查 catalog、harness 表格和 README 是否漂移。
+
+维护者可使用开发专用的 [Matt skills 自动化](docs/automations.md)，审查固定的上游 SHA 并创建 draft PR。自动化不包含在 npm 包中，消费者命令仍然离线运行。

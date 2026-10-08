@@ -22,3 +22,8 @@ coverage/
 !.agents/skills/ref-openspec-bump/**
 !.agents/skills/upstream-bump/
 !.agents/skills/upstream-bump/**
+!.agents/skills/matt-skills-monitor/
+!.agents/skills/matt-skills-monitor/**
+
+.codex/
+var/matt-skills-monitor/

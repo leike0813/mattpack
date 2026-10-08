@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Expand harness support with verified project targets, including MiniMax Code,
+  Warp, Amp and Replit Agent. Correct CoStrict and Kilo Code roots, distinguish
+  Roo Code from Zoo Code, and retire the unverified Amazon Q CLI target.
+  Preview root migrations with `update --dry-run`; local modifications remain
+  preserved. See [audit evidence](docs/harness-audit.md) and README recovery steps.
+- Add development-only Matt skills auditing with fixed-SHA observations,
+  repository-wide run locking and draft-PR maintenance. The Orca schedule is
+  registered disabled; consumer commands and npm contents stay offline.
+
 The bundled `mattpocock/skills` snapshot advances from
 `6654f6b60cd9d5be8b54c6fafe44346dabeb3b76` to
 `b0618bc436ad893b3c5e84e55fba86586d34a404`. The target includes upstream plugin

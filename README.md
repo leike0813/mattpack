@@ -43,45 +43,62 @@ A preset selects roots. Add individual roots with `--skills <comma-separated ids
 | Harness | Project-local skill root |
 |---|---|
 | `agents` | `.agents/skills` |
-| `amazon-q` | `.amazonq/skills` |
+| `amp` | `.agents/skills` |
 | `antigravity` | `.agents/skills` |
+| `autohand` | `.autohand/skills` |
 | `auggie` | `.augment/skills` |
 | `bob` | `.bob/skills` |
 | `claude` | `.claude/skills` |
 | `cline` | `.cline/skills` |
+| `codebuff` | `.agents/skills` |
 | `codeartsagent` | `.codeartsdoer/skills` |
 | `codebuddy` | `.codebuddy/skills` |
 | `codex` | `.agents/skills` |
 | `command-code` | `.commandcode/skills` |
 | `continue` | `.continue/skills` |
-| `costrict` | `.cospec/skills` |
+| `costrict` | `.costrict/skills` |
 | `crush` | `.crush/skills` |
 | `cursor` | `.cursor/skills` |
+| `deep-agents` | `.deepagents/skills` |
+| `deepseek-harness` | `.dsh/skills` |
 | `devin` | `.devin/skills` |
 | `factory` | `.factory/skills` |
 | `forgecode` | `.forge/skills` |
 | `gemini` | `.gemini/skills` |
 | `github-copilot` | `.github/skills` |
+| `goose` | `.goose/skills` |
+| `grok` | `.grok/skills` |
 | `hermes` | `.hermes/skills` |
 | `iflow` | `.iflow/skills` |
 | `junie` | `.junie/skills` |
-| `kilocode` | `.kilocode/skills` |
+| `kilocode` | `.kilo/skills` |
 | `kimi` | `.kimi-code/skills` |
 | `kiro` | `.kiro/skills` |
 | `lingma` | `.lingma/skills` |
+| `minimax-code` | `.minimax/skills` |
+| `openhands` | `.openhands/skills` |
 | `oh-my-pi` | `.omp/skills` |
 | `opencode` | `.opencode/skills` |
 | `pi` | `.pi/skills` |
+| `prime-agent` | `.prime/agent/skills` |
 | `qoder` | `.qoder/skills` |
 | `qwen` | `.qwen/skills` |
+| `replit-agent` | `.agents/skills` |
 | `roocode` | `.roo/skills` |
 | `rovodev` | `.rovodev/skills` |
+| `sourcecraft-code-assistant` | `.codeassistant/skills` |
 | `trae` | `.trae/skills` |
 | `vibe` | `.vibe/skills` |
+| `warp` | `.agents/skills` |
 | `zcode` | `.zcode/skills` |
 | `zed` | `.agents/skills` |
+| `zoo-code` | `.roo/skills` |
 
-`agents`, `antigravity`, `codex`, and `zed` share `.agents/skills`; selecting them together writes one physical tree and records every logical consumer. Detection is advisory, while an explicit `--tools` selection wins.
+Harnesses that share a root (including `.agents/skills` and Roo/Zoo Code's `.roo/skills`) write one physical tree and record every logical consumer. Detection is advisory, while an explicit `--tools` selection wins. See [harness audit evidence](docs/harness-audit.md) for verified product surfaces.
+
+CoStrict now targets `.costrict/skills` and Kilo Code targets `.kilo/skills`. Preview `update --dry-run`: unchanged owned files migrate through the normal planner; local edits and extra files at the old root remain preserved and reported. Resolve unowned conflicts at the new root before updating.
+
+`amazon-q` is retired because the reviewed Q CLI has no native skills target; its IDE surface remains unverified. Stored selections return `UNKNOWN_TOOL` from update/doctor before writes. Reselect supported tools with `init --tools <ids> --yes`, or use ownership-safe `remove --yes` to uninstall from the old lock.
 
 ## Commands
 
@@ -137,3 +154,5 @@ pnpm check
 ```
 
 Regenerate both language versions with `pnpm run docs`; CI uses `pnpm docs:check` to reject catalog, harness-table, or README drift.
+
+Maintainers can use the development-only [Matt skills automation](docs/automations.md) to review a fixed upstream SHA and open a draft PR. It is excluded from the npm package; consumer commands remain offline.

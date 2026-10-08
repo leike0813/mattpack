@@ -31,6 +31,7 @@
     "scripts:build": "node -e \"require('node:fs').rmSync('.scripts-dist',{recursive:true,force:true})\" && tsc -p tsconfig.scripts.json",
     "sync:upstream": "pnpm scripts:build && node .scripts-dist/scripts/sync-upstream.js",
     "validate:upstream": "pnpm scripts:build && node .scripts-dist/scripts/validate-upstream.js",
+    "upstream:monitor": "pnpm --silent scripts:build && node .scripts-dist/scripts/upstream-monitor.js",
     "docs": "pnpm scripts:build && node .scripts-dist/scripts/generate-readme.js",
     "docs:check": "pnpm scripts:build && node .scripts-dist/scripts/generate-readme.js --check",
     "release:bump": "pnpm run check && pnpm exec bumpp --yes --commit \"chore(release): publish @leike0813/mattpack\" && pnpm run docs && git add README.md README.zh-CN.md && git commit -m \"docs: sync README for release\" && git push"

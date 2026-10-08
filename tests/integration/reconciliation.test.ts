@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { MattpackError } from "../../src/core/errors.js";
 import { doctorProject, installProject, removeProject, updateProject } from "../../src/core/service.js";
-import { OWNER_FILE, readConfig, readLock, scanSkill, type ManagedSkill } from "../../src/core/state.js";
+import { OWNER_FILE, readConfig, readLock, scanSkill, type ConfigState, type LockState, type ManagedSkill } from "../../src/core/state.js";
 
 const packageRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
@@ -60,6 +60,110 @@ describe("installation lifecycle", () => {
       assert.equal(result.targets?.length, 1);
       assert.deepEqual(result.targets?.[0]?.consumers, ["agents", "codex", "zed"]);
       assert.equal(result.plan.lock?.managedSkills.length, 6);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("moves corrected harness roots through normal ownership planning", async () => {
+    for (const [id, oldRoot, newRoot] of [
+      ["costrict", ".cospec/skills", ".costrict/skills"],
+      ["kilocode", ".kilocode/skills", ".kilo/skills"]
+    ] as const) {
+      const root = await mkdtemp(path.join(os.tmpdir(), "mattpack-root-move-"));
+      try {
+        await installProject({ projectRoot: root, packageRoot, preset: "general", harnesses: ["codex"] });
+        const lockPath = path.join(root, ".mattpack", "lock.json");
+        const configPath = path.join(root, ".mattpack", "config.json");
+        const config = await readConfig(root);
+        const lock = await readLock(root);
+        assert.ok(config && lock);
+        const oldSkillRoot = path.join(root, oldRoot);
+        const newSkillRoot = path.join(root, newRoot);
+        await mkdir(oldSkillRoot, { recursive: true });
+        await mkdir(newSkillRoot, { recursive: true });
+        const oldManaged = lock.managedSkills.map((skill) => ({ ...skill, root: oldRoot }));
+        for (const skill of oldManaged) {
+          const installed = path.join(root, ...oldRoot.split("/"), skill.name);
+          const source = path.join(root, ".agents", "skills", skill.name);
+          await mkdir(path.dirname(installed), { recursive: true });
+          await cp(source, installed, { recursive: true });
+        }
+        await rm(path.join(root, ".agents"), { recursive: true });
+        const installedLock: LockState = {
+          ...lock,
+          harnesses: [id],
+          targets: [{ root: oldRoot, consumers: [id] }],
+          managedSkills: oldManaged
+        };
+        const installedConfig: ConfigState = { ...config, harnesses: [id] };
+        await writeFile(configPath, `${JSON.stringify(installedConfig, null, 2)}\n`);
+        await writeFile(lockPath, `${JSON.stringify(installedLock, null, 2)}\n`);
+
+        const oldSkill = path.join(root, ...oldRoot.split("/"), oldManaged[0]!.name);
+        const newConflict = path.join(newSkillRoot, oldManaged[1]!.name);
+        await mkdir(newConflict, { recursive: true });
+        await writeFile(path.join(newConflict, "mine.txt"), "unowned\n");
+        const before = await readFile(path.join(oldSkill, "SKILL.md"));
+        const blocked = await updateProject({ projectRoot: root, packageRoot, dryRun: true });
+        assert.ok(blocked.plan.conflicts.some((issue) => issue.key === `${newRoot}/${oldManaged[1]!.name}`));
+        assert.deepEqual(await readFile(path.join(oldSkill, "SKILL.md")), before);
+        assert.equal(await readFile(path.join(newConflict, "mine.txt"), "utf8"), "unowned\n");
+        assert.deepEqual(await readLock(root), installedLock);
+        await assert.rejects(
+          updateProject({ projectRoot: root, packageRoot }),
+          (error) => error instanceof MattpackError && error.code === "CONFLICT"
+        );
+        assert.deepEqual(await readLock(root), installedLock);
+
+        await rm(newConflict, { recursive: true });
+        await writeFile(path.join(oldSkill, "SKILL.md"), "local edit\n");
+        await writeFile(path.join(oldSkill, "notes.txt"), "local extra\n");
+        const deletedSkill = path.join(root, oldRoot, oldManaged[2]!.name);
+        await rm(path.join(deletedSkill, "SKILL.md"));
+        const migrated = await updateProject({ projectRoot: root, packageRoot });
+        assert.equal(migrated.applied?.changed, true);
+        assert.equal(await readFile(path.join(oldSkill, "SKILL.md"), "utf8"), "local edit\n");
+        assert.equal(await readFile(path.join(oldSkill, "notes.txt"), "utf8"), "local extra\n");
+        assert.equal(await readFile(path.join(root, newRoot, "grill-me", "SKILL.md"), "utf8"),
+          await readFile(path.join(packageRoot, "vendor/mattpocock-skills/skills/productivity/grill-me/SKILL.md"), "utf8"));
+        assert.equal(await access(path.join(root, oldRoot, oldManaged[1]!.name)).then(() => true, () => false), false);
+        assert.equal(await access(path.join(root, oldRoot, oldManaged[2]!.name)).then(() => true, () => false), false);
+        assert.ok(migrated.plan.divergences.some((issue) =>
+          issue.key === `${oldRoot}/${oldManaged[2]!.name}` && issue.paths.includes("SKILL.md")));
+        assert.equal((await readLock(root))?.harnesses[0], id);
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("rejects retired Amazon Q config before mutation and removes from prior ownership state", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "mattpack-retired-tool-"));
+    try {
+      await installProject({ projectRoot: root, packageRoot, preset: "general", harnesses: ["codex"] });
+      const config = await readConfig(root);
+      const lock = await readLock(root);
+      assert.ok(config && lock);
+      const amazonRoot = ".amazonq/skills";
+      const managed = lock.managedSkills.map((skill) => ({ ...skill, root: amazonRoot }));
+      for (const skill of managed) {
+        const destination = path.join(root, amazonRoot, skill.name);
+        await mkdir(path.dirname(destination), { recursive: true });
+        await cp(path.join(root, ".agents/skills", skill.name), destination, { recursive: true });
+      }
+      await rm(path.join(root, ".agents"), { recursive: true });
+      const priorLock: LockState = { ...lock, harnesses: ["amazon-q"], targets: [{ root: amazonRoot, consumers: ["amazon-q"] }], managedSkills: managed };
+      const priorConfig: ConfigState = { ...config, harnesses: ["amazon-q"] };
+      await writeFile(path.join(root, ".mattpack/config.json"), `${JSON.stringify(priorConfig, null, 2)}\n`);
+      await writeFile(path.join(root, ".mattpack/lock.json"), `${JSON.stringify(priorLock, null, 2)}\n`);
+      const stateBefore = await readFile(path.join(root, ".mattpack/lock.json"));
+      await assert.rejects(updateProject({ projectRoot: root, packageRoot }), (error) => error instanceof MattpackError && error.code === "UNKNOWN_TOOL");
+      await assert.rejects(doctorProject(root, packageRoot), (error) => error instanceof MattpackError && error.code === "UNKNOWN_TOOL");
+      assert.deepEqual(await readFile(path.join(root, ".mattpack/lock.json")), stateBefore);
+      assert.equal((await removeProject({ projectRoot: root })).applied?.changed, true);
+      await assert.rejects(access(path.join(root, amazonRoot, "grill-me", "SKILL.md")));
+      assert.equal((await installProject({ projectRoot: root, packageRoot, preset: "general", harnesses: ["codex"] })).applied?.changed, true);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
