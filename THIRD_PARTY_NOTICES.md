@@ -3,10 +3,14 @@
 ## mattpocock/skills
 
 Mattpack bundles files from `mattpocock/skills` at commit
-`6654f6b60cd9d5be8b54c6fafe44346dabeb3b76`.
+`b0618bc436ad893b3c5e84e55fba86586d34a404`.
 
 Copyright (c) 2026 Matt Pocock. Licensed under the MIT License. The complete
 license text is included at `vendor/mattpocock-skills/LICENSE`.
+
+The bundled `pr` skill credits Dex Horthy of Humanlayer for its Summary visuals,
+adapted from `show-me`. Its upstream attribution is preserved at
+`vendor/mattpocock-skills/skills/engineering/pr/CREDITS.md` and in skill metadata.
 
 Mattpack is unofficial and is not affiliated with or endorsed by Matt Pocock.
 

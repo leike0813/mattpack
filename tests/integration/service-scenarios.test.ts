@@ -28,7 +28,7 @@ describe("service scenarios", () => {
       await installProject({ projectRoot: root, packageRoot, preset: "general", harnesses: ["codex"] });
       await writeFile(path.join(root, ".agents", "skills", "mine.txt"), "unrelated\n");
       const expanded = await installProject({ projectRoot: root, packageRoot, preset: "default", harnesses: ["codex"] });
-      assert.equal(expanded.resolution?.skills.length, 16);
+      assert.equal(expanded.resolution?.skills.length, 15);
       assert.equal(await missing(path.join(root, ".agents", "skills", "tdd", "SKILL.md")), false);
 
       const contracted = await installProject({ projectRoot: root, packageRoot, preset: "general", harnesses: ["codex"] });

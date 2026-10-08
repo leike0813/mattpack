@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import { MattpackError } from "../../src/core/errors.js";
 import { resolveSkillSet } from "../../src/core/dependency-graph.js";
+import { SKILL_DEPENDENCIES } from "../../src/catalog/dependencies.js";
 
 describe("dependency resolution", () => {
   it("returns a deterministic recursive reason chain", () => {
@@ -38,5 +39,21 @@ describe("dependency resolution", () => {
       resolveSkillSet(["root"], new Set(["root", "child"]), { root: { requires: ["child"] } }, false),
       { roots: ["root"], dependencies: [], skills: ["root"] }
     );
+  });
+
+  it("resolves implement-spec's explicit closure and dependency kinds", () => {
+    const result = resolveSkillSet(
+      ["implement-spec"],
+      new Set([
+        "implement-spec", "tdd", "code-review", "codebase-design", "setup-matt-pocock-skills"
+      ]),
+      SKILL_DEPENDENCIES
+    );
+    assert.deepEqual(result.dependencies, [
+      { name: "code-review", kind: "requires", chain: ["implement-spec", "code-review"] },
+      { name: "codebase-design", kind: "requires", chain: ["implement-spec", "tdd", "codebase-design"] },
+      { name: "setup-matt-pocock-skills", kind: "setupCompanion", chain: ["implement-spec", "setup-matt-pocock-skills"] },
+      { name: "tdd", kind: "requires", chain: ["implement-spec", "tdd"] }
+    ]);
   });
 });

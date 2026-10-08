@@ -149,7 +149,7 @@ Do not create empty abstraction files merely to match this tree. Add a module wh
 
 ## Upstream Locking
 
-Initialize `upstream.lock.json` with this bootstrap pin:
+The current `upstream.lock.json` snapshot is:
 
 ```json
 {
@@ -157,7 +157,7 @@ Initialize `upstream.lock.json` with this bootstrap pin:
   "upstreams": {
     "mattpocock/skills": {
       "repository": "https://github.com/mattpocock/skills.git",
-      "commit": "6654f6b60cd9d5be8b54c6fafe44346dabeb3b76",
+      "commit": "b0618bc436ad893b3c5e84e55fba86586d34a404",
       "vendorPath": "vendor/mattpocock-skills",
       "license": "MIT"
     }
@@ -256,13 +256,12 @@ diagnosing-bugs
 tdd
 improve-codebase-architecture
 code-review
-resolving-merge-conflicts
 handoff
 wait-what
 writing-for-agents
 ```
 
-Expected added dependencies at the bootstrap pin:
+Expected added dependencies at the current pin:
 
 ```text
 grilling
@@ -270,7 +269,7 @@ domain-modeling
 codebase-design
 ```
 
-Expected resolved count: **16**.
+Expected resolved count: **15**.
 
 This is an explicit allowlist. New upstream stable skills must not enter `default` automatically.
 
@@ -311,7 +310,7 @@ skills/productivity/*/SKILL.md
 
 Verify the result against `.claude-plugin/plugin.json`. A mismatch is a release-blocking upstream-catalog error.
 
-Expected count at the bootstrap pin: **25**.
+Expected count at the current pin: **27**.
 
 ### `beta-only`
 
@@ -319,7 +318,7 @@ Alias: `in-progress`.
 
 Purpose: all roots under `skills/in-progress/*/SKILL.md`, plus required stable dependencies and setup companions.
 
-Expected beta root count at the bootstrap pin: **8**.
+Expected beta root count at the current pin: **7**. With dependencies enabled, the resolved count is **9**.
 
 `beta-only` means “only beta roots,” not “forbid stable dependencies.” Human and JSON output must distinguish the beta roots from stable additions.
 
@@ -333,7 +332,7 @@ Purpose:
 promoted + in-progress + misc
 ```
 
-Expected count at the bootstrap pin: **37**.
+Expected count at the current pin: **38**.
 
 `everything` is canonical because `misc` is not semantically beta; `beta` remains the user-facing alias from the original design.
 
@@ -363,7 +362,7 @@ type SkillDependency = {
 - `requires`: another skill needed for a core branch of the selected skill.
 - `setupCompanions`: a skill that must be installed and may need to be run manually to configure the project. Mattpack never invokes it.
 
-Initialize these edges:
+Maintain these reviewed edges:
 
 ```text
 grill-me                         -> requires: grilling
@@ -381,7 +380,8 @@ code-review                      -> setup: setup-matt-pocock-skills
 loop-me                          -> requires: grilling
 writing-fragments                -> requires: grilling
 setup-ts-deep-modules            -> requires: codebase-design
-implement-spec                   -> requires: code-review
+implement-spec                   -> requires: tdd, code-review
+                                  setup: setup-matt-pocock-skills
 retro                            -> requires: writing-for-agents
 ```
 

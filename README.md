@@ -30,11 +30,11 @@ npx @leike0813/mattpack@0.1.3 init --tools codex
 
 | Preset | Aliases | Purpose | Roots | Added dependencies | Resolved |
 |---|---|---|---:|---|---:|
-| `default` | `developing`<br>`dev` | Curated day-to-day software development | 13 | `codebase-design (requires)`<br>`domain-modeling (requires)`<br>`grilling (requires)` | 16 |
+| `default` | `developing`<br>`dev` | Curated day-to-day software development | 12 | `codebase-design (requires)`<br>`domain-modeling (requires)`<br>`grilling (requires)` | 15 |
 | `general` | — | Lightweight general planning and agent workflow support | 5 | `grilling (requires)` | 6 |
-| `full` | — | All promoted stable skills | 25 | — | 25 |
-| `beta-only` | `in-progress` | All beta roots plus required stable dependencies | 8 | `code-review (requires)`<br>`codebase-design (requires)`<br>`grilling (requires)`<br>`setup-matt-pocock-skills (setupCompanion)`<br>`writing-for-agents (requires)` | 13 |
-| `everything` | `beta`<br>`experimental` | All promoted, in-progress, and misc skills | 37 | — | 37 |
+| `full` | — | All promoted stable skills | 27 | — | 27 |
+| `beta-only` | `in-progress` | All beta roots plus required stable dependencies | 7 | `codebase-design (requires)`<br>`grilling (requires)` | 9 |
+| `everything` | `beta`<br>`experimental` | All promoted, in-progress, and misc skills | 38 | — | 38 |
 
 A preset selects roots. Add individual roots with `--skills <comma-separated ids>` or the interactive skill catalog. Mattpack recursively adds declared `requires` and `setupCompanion` skills, reports why each was added, deduplicates the result, and rejects missing nodes or cycles. `beta-only` has beta roots but may add stable dependencies. Use `--no-deps` only when you accept a potentially unusable installation.
 
@@ -113,9 +113,17 @@ Mattpack stores intent in `.mattpack/config.json`, resolved hashes in `.mattpack
 
 Writes are staged, checked again immediately before replacement, rolled back on failure, and committed to `lock.json` last.
 
+## Upgrading from the previous snapshot
+
+Upgrade the Mattpack package, then preview `mattpack update --dry-run`. Upstream promoted `implement-spec` and `retro` to stable, added stable `pr` and beta `chief-of-staff`, and removed `resolving-merge-conflicts`. New skills follow dynamic presets; `default` only drops the removed skill and `general` is unchanged. To keep the promoted skills in `beta-only`, add them explicitly with `mattpack init beta-only --tools <your-tools> --skills implement-spec,retro --yes`.
+
+If `.mattpack/config.json` lists `resolving-merge-conflicts` in `additionalSkills`, remove that entry before retrying `update` or interactive `init`. Both validate stored roots and return `UNKNOWN_SKILL` before writes; preserve the other selections and configuration.
+
+The skills now use `GLOSSARY.md` and `GLOSSARY-MAP.md`. Rename existing `CONTEXT.md` and `CONTEXT-MAP.md` documents as appropriate, including per-context files and map links, and update navigation pointers in project instructions and domain configuration. Mattpack leaves these consumer documents untouched. Upstream has frozen `misc` maintenance; those skills remain available through `everything`. See [release notes](https://github.com/leike0813/mattpack/blob/main/CHANGELOG.md).
+
 ## Bundled provenance
 
-This release bundles `mattpocock/skills` commit `6654f6b60cd9d5be8b54c6fafe44346dabeb3b76` under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Complete upstream skill directories are copied byte-for-byte; Mattpack does not execute upstream scripts.
+This release bundles `mattpocock/skills` commit `b0618bc436ad893b3c5e84e55fba86586d34a404` under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Complete upstream skill directories are copied byte-for-byte; Mattpack does not execute upstream scripts.
 
 [OpenSpec](https://github.com/Fission-AI/OpenSpec) is pinned under `references/OpenSpec` as a development-only design reference. It is not a runtime dependency and is excluded from the npm package.
 

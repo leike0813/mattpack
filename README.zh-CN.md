@@ -30,11 +30,11 @@ npx @leike0813/mattpack@0.1.3 init --tools codex
 
 | Preset | 别名 | 用途 | Roots | 新增依赖 | 最终数量 |
 |---|---|---|---:|---|---:|
-| `default` | `developing`<br>`dev` | 精选的日常软件开发 skill | 13 | `codebase-design (requires)`<br>`domain-modeling (requires)`<br>`grilling (requires)` | 16 |
+| `default` | `developing`<br>`dev` | 精选的日常软件开发 skill | 12 | `codebase-design (requires)`<br>`domain-modeling (requires)`<br>`grilling (requires)` | 15 |
 | `general` | — | 轻量级通用规划和 agent 工作流支持 | 5 | `grilling (requires)` | 6 |
-| `full` | — | 所有已推广的稳定 skill | 25 | — | 25 |
-| `beta-only` | `in-progress` | 所有 beta root 以及所需的 stable 依赖 | 8 | `code-review (requires)`<br>`codebase-design (requires)`<br>`grilling (requires)`<br>`setup-matt-pocock-skills (setupCompanion)`<br>`writing-for-agents (requires)` | 13 |
-| `everything` | `beta`<br>`experimental` | 所有已推广、in-progress 和 misc skill | 37 | — | 37 |
+| `full` | — | 所有已推广的稳定 skill | 27 | — | 27 |
+| `beta-only` | `in-progress` | 所有 beta root 以及所需的 stable 依赖 | 7 | `codebase-design (requires)`<br>`grilling (requires)` | 9 |
+| `everything` | `beta`<br>`experimental` | 所有已推广、in-progress 和 misc skill | 38 | — | 38 |
 
 Preset 选择 root。可以通过 `--skills <逗号分隔的 id>` 或交互式 skill catalog 添加单独的 root。Mattpack 会递归加入声明为 `requires` 和 `setupCompanion` 的 skill，说明每个新增 skill 的原因，去重结果，并拒绝缺失节点或循环依赖。`beta-only` 的 root 只来自 beta，但仍可能加入 stable 依赖。只有在接受安装结果可能不可用时才使用 `--no-deps`。
 
@@ -113,9 +113,17 @@ Mattpack 将用户意图保存到 `.mattpack/config.json`，将解析后的 hash
 
 写入会经过 staging，在替换前再次检查，失败时回滚，并最后才写入 `lock.json`。
 
+## 从上一版快照升级
+
+先升级 Mattpack 包，再用 `mattpack update --dry-run` 查看计划。上游将 `implement-spec`、`retro` 转为稳定 skill，新增稳定 skill `pr` 和 beta skill `chief-of-staff`，并删除 `resolving-merge-conflicts`。新 skill 随动态 preset 收录；`default` 只移除被删除的 skill，`general` 保持不变。若要在 `beta-only` 中保留晋升的两个 skill，可运行 `mattpack init beta-only --tools <你的工具> --skills implement-spec,retro --yes` 显式追加。
+
+若 `.mattpack/config.json` 的 `additionalSkills` 含有 `resolving-merge-conflicts`，请先删除这一项，再重试 `update` 或交互式 `init`，并保留其他选择与配置。两个命令都会校验已保存的 root，在写入前返回 `UNKNOWN_SKILL`。
+
+Skill 现在使用 `GLOSSARY.md` 和 `GLOSSARY-MAP.md`。请按项目情况重命名已有的 `CONTEXT.md`、`CONTEXT-MAP.md`，包括各 context 中的文件和 map 内的链接，并更新项目指令及领域配置中的导航引用。Mattpack 会保留这些消费者文档。上游已冻结 `misc` 的维护，相关 skill 仍可通过 `everything` 安装。详见[更新记录](https://github.com/leike0813/mattpack/blob/main/CHANGELOG.md)。
+
 ## 随包上游来源
 
-本版本包含 `mattpocock/skills` 的 commit `6654f6b60cd9d5be8b54c6fafe44346dabeb3b76`，遵循 MIT 许可证。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。完整的上游 skill 目录按字节复制，Mattpack 不会执行上游脚本。
+本版本包含 `mattpocock/skills` 的 commit `b0618bc436ad893b3c5e84e55fba86586d34a404`，遵循 MIT 许可证。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。完整的上游 skill 目录按字节复制，Mattpack 不会执行上游脚本。
 
 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 固定在 `references/OpenSpec`，仅作为开发阶段的设计参考。它不是运行时依赖，也不会包含在 npm 包中。
 
