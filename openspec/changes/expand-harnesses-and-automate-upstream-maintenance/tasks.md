@@ -14,7 +14,7 @@
 ## 3. Delivery acceptance
 
 - [x] 3.1 Run focused checks, pnpm check, OpenSpec strict validation and independent review; verify pins, vendor bytes, dependency lock and original worktree are unchanged by this feature.
-- [ ] 3.2 Commit and push only the isolated feature scope and create a draft PR; verify the PR and report its already-completed local-main prerequisite.
+- [x] 3.2 Commit and push only the isolated feature scope and create a draft PR; verify the PR and report its already-completed local-main prerequisite.
 - [ ] 3.3 Register the dedicated disabled Orca task, reuse installed dependencies, complete a real first run using the feature commit, restore origin/main daily configuration and verify model/timezone/disabled state and structured noop report.
 
 ## Workflow follow-up

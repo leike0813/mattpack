@@ -77,6 +77,8 @@ pnpm --silent upstream:monitor start --owner-pid <coordinator-pid> --base-ref <f
 ```
 
 start 负责工作区、origin、共享锁、基线 fetch、PR 状态查询和分支选择。
+上游 main 的唯一查询由 start 执行。验收或复查时读取 audit.json 和 handoff，
+不得另外运行 ls-remote、fetch main 或查询 GitHub HEAD；这些查询会引入第二次观察。
 只有 ok=true 才进入后续步骤。任何错误都保留诊断并停止；不得手动跳过锁、
 伪造 PR 查询结果或把远程故障当作无变化。
 
