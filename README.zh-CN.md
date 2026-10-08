@@ -23,7 +23,7 @@ npx @leike0813/mattpack init --tools codex
 Mattpack 只会写入选定的项目根目录。复现旧版本安装结果时，请固定包版本：
 
 ```sh
-npx @leike0813/mattpack@0.1.3 init --tools codex
+npx @leike0813/mattpack@0.1.4 init --tools codex
 ```
 
 ## Preset

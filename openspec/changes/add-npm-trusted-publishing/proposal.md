@@ -23,4 +23,4 @@ None.
 
 ## Impact
 
-GitHub workflows, package metadata and release scripts, release validation tests, generated README guidance, and development release documentation. No dependency, runtime, snapshot, or package-version bump is part of this change. The owner configures the npm Trusted Publisher; the first actual release remains a separate maintainer action.
+GitHub workflows, package metadata and release scripts, release validation tests, generated README guidance, and development release documentation. Prepare version 0.1.4 and its release notes for the first publication after merge. Dependencies, runtime behavior and snapshot pins remain unchanged by the publishing implementation. The owner configures the npm Trusted Publisher before the release.

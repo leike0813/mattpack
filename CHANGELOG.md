@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.1.4
+
+- Add npm Trusted Publishing with provenance after the platform and Node.js
+  compatibility gates pass. Version preparation updates the README and runs
+  checks before maintainers create a release commit or tag.
 
 - Expand harness support with verified project targets, including MiniMax Code,
   Warp, Amp and Replit Agent. Correct CoStrict and Kilo Code roots, distinguish
