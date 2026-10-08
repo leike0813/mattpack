@@ -1,0 +1,71 @@
+name: Publish npm
+
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths:
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/publish.yml'
+      - 'package.json'
+      - 'scripts/lib/release.ts'
+      - 'scripts/verify-release.ts'
+      - 'tests/unit/release.test.ts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    uses: ./.github/workflows/ci.yml
+
+  dry-run:
+    if: github.event_name != 'push'
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # Rehearse existing versions without npm's already-published version check.
+      - run: npm publish --dry-run --force --access public --ignore-scripts
+
+  publish:
+    if: github.event_name == 'push'
+    needs: check
+    runs-on: ubuntu-latest
+    concurrency:
+      group: npm-publish-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require tagged source in main
+        run: git merge-base --is-ancestor HEAD origin/main
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build && pnpm scripts:build
+      - name: Verify release identity
+        run: node .scripts-dist/scripts/verify-release.js
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+      - name: Publish with trusted identity
+        run: npm publish --access public --provenance --ignore-scripts

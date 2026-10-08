@@ -23,7 +23,7 @@ npx @leike0813/mattpack init --tools codex
 Mattpack writes only below the selected project root. Pin the package version when reproducing an older installation:
 
 ```sh
-npx @leike0813/mattpack@0.1.3 init --tools codex
+npx @leike0813/mattpack@0.1.4 init --tools codex
 ```
 
 ## Presets
@@ -156,3 +156,5 @@ pnpm check
 Regenerate both language versions with `pnpm run docs`; CI uses `pnpm docs:check` to reject catalog, harness-table, or README drift.
 
 Maintainers can use the development-only [Matt skills automation](docs/automations.md) to review a fixed upstream SHA and open a draft PR. It is excluded from the npm package; consumer commands remain offline.
+
+See the [release and npm publishing guide](https://github.com/leike0813/mattpack/blob/main/docs/releases.md) before preparing or publishing a release.
