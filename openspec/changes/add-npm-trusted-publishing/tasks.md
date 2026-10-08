@@ -12,7 +12,7 @@
 
 ## 3. Delivery validation
 
-- [ ] 3.1 Run pnpm check, OpenSpec strict validation, independent review and GitHub PR checks; verify source pins, vendor, dependency lock, package version and original worktree edits remain unchanged.
+- [x] 3.1 Run pnpm check, OpenSpec strict validation, independent review and GitHub PR checks; verify source pins, vendor, dependency lock, package version and original worktree edits remain unchanged.
 
 ## Workflow follow-up
 
