@@ -156,3 +156,5 @@ pnpm check
 使用 `pnpm run docs` 同时生成中英文 README。CI 使用 `pnpm docs:check` 检查 catalog、harness 表格和 README 是否漂移。
 
 维护者可使用开发专用的 [Matt skills 自动化](docs/automations.md)，审查固定的上游 SHA 并创建 draft PR。自动化不包含在 npm 包中，消费者命令仍然离线运行。
+
+准备或发布版本前，请阅读[发布与 npm 发布指南](https://github.com/leike0813/mattpack/blob/main/docs/releases.md)。

@@ -156,3 +156,5 @@ pnpm check
 Regenerate both language versions with `pnpm run docs`; CI uses `pnpm docs:check` to reject catalog, harness-table, or README drift.
 
 Maintainers can use the development-only [Matt skills automation](docs/automations.md) to review a fixed upstream SHA and open a draft PR. It is excluded from the npm package; consumer commands remain offline.
+
+See the [release and npm publishing guide](https://github.com/leike0813/mattpack/blob/main/docs/releases.md) before preparing or publishing a release.

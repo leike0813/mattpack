@@ -606,6 +606,10 @@ Run in a dedicated clean linked worktree under a whole-run repository lock. The 
 
 Maintenance must preserve unrelated files and offline consumer operation. It cannot merge, publish npm, change package versions, install dependencies, advance the OpenSpec pin, force-push, reset user work or execute upstream scripts. Unresolved semantic or license changes produce a blocked report. Read [.agents/skills/matt-skills-monitor/SKILL.md](.agents/skills/matt-skills-monitor/SKILL.md) before starting or recovering a run.
 
+### npm release authority
+
+Follow [docs/releases.md](docs/releases.md) for every npm release. Release preparation and version changes require a maintainer; publish only by pushing a fresh stable `vX.Y.Z` tag from merged `main`, after verifying that the exact version is unpublished. The Matt skills maintenance automation never changes package versions, creates release tags, or publishes npm.
+
 Before changing code:
 
 1. Read this file.
