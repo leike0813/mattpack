@@ -80,3 +80,11 @@ stdout 是一个 JSON envelope：成功为 `{ok:true,result:...}`，失败为 `{
 5. schedule、timezone、fresh session 和 disabled 状态正确。
 
 尚未合并的 feature 只在首次验收用 feature commit 作为 base-ref，随后把 prompt 恢复为默认 origin/main。Feature PR 合并前不能启用默认调度；合并后维护者检查专用 worktree 干净且基线包含本功能，再手动启用。验收报告不能用脚本 fixture 测试代替真实 Orca 运行。
+
+2026-10-08 的真实 fresh-session 验收使用 feature commit
+`2b997fa072603a63b454bc9ad9d5db4728630f6e`。实际协调模型为指定的
+MiniMax-M3.1-Flash-Preview/high；单次观察返回的 pin 和 target 均为
+`b0618bc436ad893b3c5e84e55fba86586d34a404`，结果为 noop，
+finish 后锁释放且 worktree 干净。随后恢复 origin/main prompt，
+保留 disabled、02:00 Asia/Shanghai 和 fresh session 设置。
+变化后的完整更新/审查/PR 分支通过 Git fixture 测试验证，尚未触发真实上游更新。

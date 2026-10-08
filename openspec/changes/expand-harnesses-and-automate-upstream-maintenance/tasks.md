@@ -15,7 +15,15 @@
 
 - [x] 3.1 Run focused checks, pnpm check, OpenSpec strict validation and independent review; verify pins, vendor bytes, dependency lock and original worktree are unchanged by this feature.
 - [x] 3.2 Commit and push only the isolated feature scope and create a draft PR; verify the PR and report its already-completed local-main prerequisite.
-- [ ] 3.3 Register the dedicated disabled Orca task, reuse installed dependencies, complete a real first run using the feature commit, restore origin/main daily configuration and verify model/timezone/disabled state and structured noop report.
+- [x] 3.3 Register the dedicated disabled Orca task, reuse installed dependencies, complete a real first run using the feature commit, restore origin/main daily configuration and verify model/timezone/disabled state and structured noop report.
+
+## Acceptance evidence
+
+- Final `pnpm check`: 103 tests passed, including every harness contract, lint/typecheck/build, offline packed smoke and generated-doc checks.
+- OpenSpec strict validation and independent read-only review passed. Pins/vendor/dependency lock are unchanged relative to the feature baseline `f81a32c`; the original workspace's existing ignore-file edit remains untouched.
+- Draft PR: https://github.com/leike0813/mattpack/pull/1. It includes the already completed local-main prerequisite `f81a32c`, disclosed in the PR.
+- Real fresh-session acceptance against feature commit `2b997fa072603a63b454bc9ad9d5db4728630f6e`: actual MiniMax-M3.1-Flash-Preview/high, monitor run `18080dad-497f-4087-8f11-519571cf74fc`, single observation, outcome `noop`, pinned/target `b0618bc436ad893b3c5e84e55fba86586d34a404`, lock released and clean worktree.
+- Final Orca settings: default `origin/main`, daily 02:00 Asia/Shanghai, fresh sessions, disabled. Machine-local IDs and reports remain ignored.
 
 ## Workflow follow-up
 
