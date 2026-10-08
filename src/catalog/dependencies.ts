@@ -25,6 +25,9 @@ export const SKILL_DEPENDENCIES: Readonly<Record<string, SkillDependency>> = {
   "loop-me": { requires: ["grilling"] },
   "writing-fragments": { requires: ["grilling"] },
   "setup-ts-deep-modules": { requires: ["codebase-design"] },
-  "implement-spec": { requires: ["code-review"] },
+  "implement-spec": {
+    requires: ["tdd", "code-review"],
+    setupCompanions: ["setup-matt-pocock-skills"]
+  },
   retro: { requires: ["writing-for-agents"] }
 };

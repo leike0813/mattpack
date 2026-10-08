@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { planInstall, type DesiredSkill } from "../../src/core/plan.js";
+import { planInstall, planRemove, type DesiredSkill } from "../../src/core/plan.js";
 import type { ConfigState, ExistingSkill, LockState, ManagedSkill } from "../../src/core/state.js";
 
 const OLD = "a".repeat(64);
@@ -35,6 +35,17 @@ const lock: LockState = {
 const desired: DesiredSkill = { ...managed, sourceDirectory: "/source" };
 
 describe("reconciliation planner", () => {
+  it("reports deleted managed files without trying to preserve nonexistent bytes during removal", () => {
+    const existing: ExistingSkill = {
+      exists: true,
+      owner: { schemaVersion: 1, manager: "mattpack", installationId: "installation", sourcePath: managed.sourcePath },
+      files: [{ path: "notes.md", sha256: NEW }]
+    };
+    const plan = planRemove({ priorLock: lock, existing: new Map([[".agents/skills/demo", existing]]) });
+    assert.deepEqual(plan.actions[0]?.preserveFiles, ["notes.md"]);
+    assert.ok(plan.divergences.some((issue) => issue.paths.includes("SKILL.md")));
+  });
+
   it("classifies unchanged managed content and extra files", () => {
     const existing: ExistingSkill = {
       exists: true,

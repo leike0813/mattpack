@@ -126,7 +126,11 @@ for (const adapter of HARNESS_ADAPTERS) {
 
 lines.push(
   "",
-  "`agents`, `antigravity`, `codex`, and `zed` share `.agents/skills`; selecting them together writes one physical tree and records every logical consumer. Detection is advisory, while an explicit `--tools` selection wins.",
+  "Harnesses that share a root (including `.agents/skills` and Roo/Zoo Code's `.roo/skills`) write one physical tree and record every logical consumer. Detection is advisory, while an explicit `--tools` selection wins. See [harness audit evidence](docs/harness-audit.md) for verified product surfaces.",
+  "",
+  "CoStrict now targets `.costrict/skills` and Kilo Code targets `.kilo/skills`. Preview `update --dry-run`: unchanged owned files migrate through the normal planner; local edits and extra files at the old root remain preserved and reported. Resolve unowned conflicts at the new root before updating.",
+  "",
+  "`amazon-q` is retired because the reviewed Q CLI has no native skills target; its IDE surface remains unverified. Stored selections return `UNKNOWN_TOOL` from update/doctor before writes. Reselect supported tools with `init --tools <ids> --yes`, or use ownership-safe `remove --yes` to uninstall from the old lock.",
   "",
   "## Commands",
   "",
@@ -158,6 +162,14 @@ lines.push(
   "",
   "Writes are staged, checked again immediately before replacement, rolled back on failure, and committed to `lock.json` last.",
   "",
+  "## Upgrading from the previous snapshot",
+  "",
+  "Upgrade the Mattpack package, then preview `mattpack update --dry-run`. Upstream promoted `implement-spec` and `retro` to stable, added stable `pr` and beta `chief-of-staff`, and removed `resolving-merge-conflicts`. New skills follow dynamic presets; `default` only drops the removed skill and `general` is unchanged. To keep the promoted skills in `beta-only`, add them explicitly with `mattpack init beta-only --tools <your-tools> --skills implement-spec,retro --yes`.",
+  "",
+  "If `.mattpack/config.json` lists `resolving-merge-conflicts` in `additionalSkills`, remove that entry before retrying `update` or interactive `init`. Both validate stored roots and return `UNKNOWN_SKILL` before writes; preserve the other selections and configuration.",
+  "",
+  "The skills now use `GLOSSARY.md` and `GLOSSARY-MAP.md`. Rename existing `CONTEXT.md` and `CONTEXT-MAP.md` documents as appropriate, including per-context files and map links, and update navigation pointers in project instructions and domain configuration. Mattpack leaves these consumer documents untouched. Upstream has frozen `misc` maintenance; those skills remain available through `everything`. See [release notes](https://github.com/leike0813/mattpack/blob/main/CHANGELOG.md).",
+  "",
   "## Bundled provenance",
   "",
   "This release bundles `mattpocock/skills` commit `" + commit + "` under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Complete upstream skill directories are copied byte-for-byte; Mattpack does not execute upstream scripts.",
@@ -166,7 +178,7 @@ lines.push(
   "",
   "## Development",
   "",
-  "Node.js 20+ and pnpm are required.",
+  "Use Node.js 24 and the pinned pnpm version for development. The published CLI supports Node.js 20+; CI also runs the tests and offline package smoke test on Node.js 20.",
   "",
   "```sh",
   "pnpm install --frozen-lockfile",
@@ -174,11 +186,17 @@ lines.push(
   "```",
   "",
   "Regenerate both language versions with `pnpm run docs`; CI uses `pnpm docs:check` to reject catalog, harness-table, or README drift.",
+  "",
+  "Maintainers can use the development-only [Matt skills automation](docs/automations.md) to review a fixed upstream SHA and open a draft PR. It is excluded from the npm package; consumer commands remain offline.",
   ""
 );
 chineseLines.push(
   "",
-  "`agents`、`antigravity`、`codex` 和 `zed` 共用 `.agents/skills`。同时选择它们时只写入一棵物理目录，并记录所有逻辑消费者。检测结果只作建议，显式传入的 `--tools` 优先。",
+  "共用目录的 harness（包括 `.agents/skills`，以及 Roo/Zoo Code 的 `.roo/skills`）只写入一棵物理目录，并记录所有逻辑消费者。检测结果只作建议，显式传入的 `--tools` 优先。已核实的产品形态见 [harness 审计依据](docs/harness-audit.md)。",
+  "",
+  "CoStrict 的目标改为 `.costrict/skills`，Kilo Code 改为 `.kilo/skills`。先用 `update --dry-run` 查看计划：未修改的受管理文件通过现有规划器迁移，旧目录中的本地修改和额外文件会保留并报告。新目录存在不属于 Mattpack 的冲突时，先处理冲突再更新。",
+  "",
+  "`amazon-q` 已移除，因为审查过的 Q CLI 没有原生 skills 目标；IDE 形态仍未核实。保存了该选择的项目在 update/doctor 写入前会收到 `UNKNOWN_TOOL`。可用 `init --tools <ids> --yes` 重新选择支持的工具，或用 `remove --yes` 根据旧 lock 安全卸载。",
   "",
   "## 命令",
   "",
@@ -210,6 +228,14 @@ chineseLines.push(
   "",
   "写入会经过 staging，在替换前再次检查，失败时回滚，并最后才写入 `lock.json`。",
   "",
+  "## 从上一版快照升级",
+  "",
+  "先升级 Mattpack 包，再用 `mattpack update --dry-run` 查看计划。上游将 `implement-spec`、`retro` 转为稳定 skill，新增稳定 skill `pr` 和 beta skill `chief-of-staff`，并删除 `resolving-merge-conflicts`。新 skill 随动态 preset 收录；`default` 只移除被删除的 skill，`general` 保持不变。若要在 `beta-only` 中保留晋升的两个 skill，可运行 `mattpack init beta-only --tools <你的工具> --skills implement-spec,retro --yes` 显式追加。",
+  "",
+  "若 `.mattpack/config.json` 的 `additionalSkills` 含有 `resolving-merge-conflicts`，请先删除这一项，再重试 `update` 或交互式 `init`，并保留其他选择与配置。两个命令都会校验已保存的 root，在写入前返回 `UNKNOWN_SKILL`。",
+  "",
+  "Skill 现在使用 `GLOSSARY.md` 和 `GLOSSARY-MAP.md`。请按项目情况重命名已有的 `CONTEXT.md`、`CONTEXT-MAP.md`，包括各 context 中的文件和 map 内的链接，并更新项目指令及领域配置中的导航引用。Mattpack 会保留这些消费者文档。上游已冻结 `misc` 的维护，相关 skill 仍可通过 `everything` 安装。详见[更新记录](https://github.com/leike0813/mattpack/blob/main/CHANGELOG.md)。",
+  "",
   "## 随包上游来源",
   "",
   "本版本包含 `mattpocock/skills` 的 commit `" + commit + "`，遵循 MIT 许可证。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。完整的上游 skill 目录按字节复制，Mattpack 不会执行上游脚本。",
@@ -218,7 +244,7 @@ chineseLines.push(
   "",
   "## 开发",
   "",
-  "需要 Node.js 20+ 和 pnpm。",
+  "开发使用 Node.js 24 和固定版本的 pnpm。发布的 CLI 支持 Node.js 20+；CI 也会在 Node.js 20 上运行测试和离线安装包验证。",
   "",
   "```sh",
   "pnpm install --frozen-lockfile",
@@ -226,6 +252,8 @@ chineseLines.push(
   "```",
   "",
   "使用 `pnpm run docs` 同时生成中英文 README。CI 使用 `pnpm docs:check` 检查 catalog、harness 表格和 README 是否漂移。",
+  "",
+  "维护者可使用开发专用的 [Matt skills 自动化](docs/automations.md)，审查固定的上游 SHA 并创建 draft PR。自动化不包含在 npm 包中，消费者命令仍然离线运行。",
   ""
 );
 
@@ -238,7 +266,7 @@ if (process.argv.includes("--check")) {
   for (const [file, output] of outputs) {
     const current = await readFile(file, "utf8").catch(() => "");
     if (current !== output) {
-      process.stderr.write(`${path.basename(file)} is out of date; run pnpm docs.\n`);
+      process.stderr.write(`${path.basename(file)} is out of date; run pnpm run docs.\n`);
       outdated = true;
     }
   }

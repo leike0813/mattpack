@@ -29,6 +29,7 @@ describe("shared harness contract", () => {
       try {
         await mkdir(managed, { recursive: true });
         if (adapter.id === "antigravity") await mkdir(path.join(projectRoot, ".agent"));
+        if (adapter.id === "warp") await writeFile(path.join(projectRoot, "WARP.md"), "");
         assert.equal((await adapter.detect(projectRoot)).detected, true);
         await writeFile(path.join(managed, "mine.txt"), "unowned\n");
         const conflict = await installProject({

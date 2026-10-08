@@ -15,11 +15,12 @@ function inside(root: string, target: string): boolean {
 export async function assertContained(projectRoot: string, target: string): Promise<string> {
   const root = await realpath(projectRoot);
   const resolved = path.resolve(target);
-  if (!inside(root, resolved)) {
+  const targetRoot = inside(root, resolved) ? root : path.resolve(projectRoot);
+  if (!inside(targetRoot, resolved)) {
     throw new MattpackError("PATH_OUTSIDE_PROJECT", `Path escapes project: ${target}`);
   }
 
-  const relative = path.relative(root, resolved);
+  const relative = path.relative(targetRoot, resolved);
   let current = root;
   for (const part of relative.split(path.sep).filter(Boolean)) {
     current = path.join(current, part);

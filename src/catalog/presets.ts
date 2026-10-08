@@ -27,7 +27,6 @@ const DEFAULT_ROOTS = [
   "tdd",
   "improve-codebase-architecture",
   "code-review",
-  "resolving-merge-conflicts",
   "handoff",
   "wait-what",
   "writing-for-agents"

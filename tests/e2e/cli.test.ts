@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { access, mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
@@ -161,6 +161,35 @@ describe("CLI", () => {
       assert.equal(unknownTool.code, 1);
       assert.match(unknownTool.stdout, /UNKNOWN_TOOL/u);
       json(unknownTool);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a retired stored harness without mutation and recovers through explicit init selection", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "mattpack-cli-retired-tool-"));
+    try {
+      const initialized = await run(["init", "general", "--dir", root, "--tools", "codex", "--yes", "--json"]);
+      assert.equal(initialized.code, 0);
+      const configPath = path.join(root, ".mattpack", "config.json");
+      const config = JSON.parse(await readFile(configPath, "utf8")) as { harnesses: string[] };
+      config.harnesses = ["amazon-q"];
+      await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
+      const lockBefore = await readFile(path.join(root, ".mattpack", "lock.json"));
+
+      for (const command of ["update", "doctor"]) {
+        const result = await run([command, "--dir", root, "--json"]);
+        assert.equal(result.code, 1);
+        assert.match(result.stdout, /UNKNOWN_TOOL/u);
+        assert.deepEqual(await readFile(path.join(root, ".mattpack", "lock.json")), lockBefore);
+      }
+
+      const recovered = await run(["init", "--dir", root, "--tools", "codex", "--yes", "--json"]);
+      assert.equal(recovered.code, 0);
+      assert.deepEqual(
+        (JSON.parse(await readFile(configPath, "utf8")) as { harnesses: string[] }).harnesses,
+        ["codex"]
+      );
     } finally {
       await rm(root, { recursive: true, force: true });
     }
