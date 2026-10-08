@@ -146,7 +146,7 @@ Skill 现在使用 `GLOSSARY.md` 和 `GLOSSARY-MAP.md`。请按项目情况重�
 
 ## 开发
 
-需要 Node.js 20+ 和 pnpm。
+开发使用 Node.js 24 和固定版本的 pnpm。发布的 CLI 支持 Node.js 20+；CI 也会在 Node.js 20 上运行测试和离线安装包验证。
 
 ```sh
 pnpm install --frozen-lockfile

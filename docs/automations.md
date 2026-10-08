@@ -6,7 +6,7 @@
 
 ## 运行环境与调度
 
-使用专用、干净的 linked worktree，而非主工作区。Node.js 20+、已安装的 pnpm 开发依赖、Git、已认证的 `gh` 和 Orca runtime 必须可用。依赖准备由维护者完成；任务不能自行安装或升级。
+使用专用、干净的 linked worktree，而非主工作区。Node.js 24、已安装的 pnpm 开发依赖、Git、已认证的 `gh` 和 Orca runtime 必须可用。依赖准备由维护者完成；任务不能自行安装或升级。
 
 | 项目 | 配置 |
 |---|---|

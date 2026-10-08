@@ -20,7 +20,15 @@ jobs:
           version: 11.10.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Test minimum supported Node.js
+        run: node --test
+        working-directory: test-dist
+      - name: Verify packed CLI on minimum supported Node.js
+        run: node .scripts-dist/scripts/verify-package.js

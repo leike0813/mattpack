@@ -146,7 +146,7 @@ This release bundles `mattpocock/skills` commit `b0618bc436ad893b3c5e84e55fba865
 
 ## Development
 
-Node.js 20+ and pnpm are required.
+Use Node.js 24 and the pinned pnpm version for development. The published CLI supports Node.js 20+; CI also runs the tests and offline package smoke test on Node.js 20.
 
 ```sh
 pnpm install --frozen-lockfile
