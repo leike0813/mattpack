@@ -6,7 +6,10 @@ import { promisify } from "node:util";
 
 const runFile = promisify(execFile);
 const packageRoot = process.cwd();
-const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+const npm = process.platform === "win32" ? process.execPath : "npm";
+const npmArgs = process.platform === "win32"
+  ? [path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js")]
+  : [];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -44,7 +47,7 @@ async function doesNotExist(file: string): Promise<boolean> {
 
 const temporary = await mkdtemp(path.join(os.tmpdir(), "mattpack-pack-"));
 try {
-  const packedOutput = await run(npm, ["pack", "--json", "--pack-destination", temporary], packageRoot);
+  const packedOutput = await run(npm, [...npmArgs, "pack", "--json", "--pack-destination", temporary], packageRoot);
   const packed: unknown = JSON.parse(packedOutput);
   const report = Array.isArray(packed) ? packed[0] : undefined;
   if (!isRecord(report) || typeof report.filename !== "string" || !Array.isArray(report.files)) {
@@ -75,7 +78,7 @@ try {
   await mkdir(installRoot);
   await mkdir(projectRoot);
   const tarball = path.join(temporary, report.filename);
-  await run(npm, ["install", "--offline", "--ignore-scripts", "--no-audit", "--no-fund", tarball], installRoot);
+  await run(npm, [...npmArgs, "install", "--offline", "--ignore-scripts", "--no-audit", "--no-fund", tarball], installRoot);
   const installedPackageRoot = path.join(installRoot, "node_modules", ...packageName.split("/"));
   const cli = path.join(installedPackageRoot, "dist", "cli.js");
   const common = ["--dir", projectRoot, "--json"];
