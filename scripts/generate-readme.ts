@@ -266,7 +266,7 @@ if (process.argv.includes("--check")) {
   for (const [file, output] of outputs) {
     const current = await readFile(file, "utf8").catch(() => "");
     if (current !== output) {
-      process.stderr.write(`${path.basename(file)} is out of date; run pnpm docs.\n`);
+      process.stderr.write(`${path.basename(file)} is out of date; run pnpm run docs.\n`);
       outdated = true;
     }
   }
