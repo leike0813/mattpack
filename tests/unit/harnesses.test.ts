@@ -5,6 +5,7 @@ import path from "node:path";
 import { describe, it } from "node:test";
 
 import { deduplicateTargets, HARNESS_ADAPTERS, harnessById, selectHarnesses } from "../../src/harnesses/registry.js";
+import { relativePath } from "../../src/core/paths.js";
 
 const EXPECTED_ROOTS: Readonly<Record<string, string>> = {
   agents: ".agents/skills",
@@ -64,7 +65,7 @@ describe("harness registry", () => {
   it("defines 51 logical harnesses across 43 exact project-local roots", () => {
     assert.equal(HARNESS_ADAPTERS.length, 51);
     for (const [id, root] of Object.entries(EXPECTED_ROOTS)) {
-      assert.equal(path.relative("/project", harnessById(id).getSkillRoot("/project")), root);
+      assert.equal(relativePath("/project", harnessById(id).getSkillRoot("/project")), root);
     }
     assert.equal(deduplicateTargets("/project", selectHarnesses(["all"])).length, 43);
     assert.throws(() => harnessById("amazon-q"), { code: "UNKNOWN_TOOL" });
