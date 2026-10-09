@@ -140,7 +140,7 @@ Skill 现在使用 `GLOSSARY.md` 和 `GLOSSARY-MAP.md`。请按项目情况重�
 
 ## 随包上游来源
 
-本版本包含 `mattpocock/skills` 的 commit `b0618bc436ad893b3c5e84e55fba86586d34a404`，遵循 MIT 许可证。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。完整的上游 skill 目录按字节复制，Mattpack 不会执行上游脚本。
+本版本包含 `mattpocock/skills` 的 commit `49dd158d1076134a641b33efb035946536778336`，遵循 MIT 许可证。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。完整的上游 skill 目录按字节复制，Mattpack 不会执行上游脚本。
 
 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 固定在 `references/OpenSpec`，仅作为开发阶段的设计参考。它不是运行时依赖，也不会包含在 npm 包中。
 
