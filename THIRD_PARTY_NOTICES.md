@@ -3,7 +3,7 @@
 ## mattpocock/skills
 
 Mattpack bundles files from `mattpocock/skills` at commit
-`b0618bc436ad893b3c5e84e55fba86586d34a404`.
+`49dd158d1076134a641b33efb035946536778336`.
 
 Copyright (c) 2026 Matt Pocock. Licensed under the MIT License. The complete
 license text is included at `vendor/mattpocock-skills/LICENSE`.

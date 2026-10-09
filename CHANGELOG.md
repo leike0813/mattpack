@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+- Advance the bundled `mattpocock/skills` snapshot from
+  `b0618bc436ad893b3c5e84e55fba86586d34a404` to
+  `49dd158d1076134a641b33efb035946536778336`. Preset roots, dependency edges,
+  expected counts, and licensing are unchanged; the only vendored difference is
+  `wizard`'s `template.sh`. Mattpack still resolves the exact bundled commit
+  offline. [Upstream diff](https://github.com/mattpocock/skills/compare/b0618bc436ad893b3c5e84e55fba86586d34a404...49dd158d1076134a641b33efb035946536778336).
+- Upstream fixes `wizard` template handling: Enter-keeps-current no longer
+  stores quotes from a double-quoted `.env` value, stages run inside
+  `run_wizard` so editing the template mid-run cannot break a running wizard,
+  screen clearing falls back to ANSI when `tput clear` fails, `write_env` also
+  sets the shell variable, and an unused color variable is dropped.
+- Upstream documents that `retro` always loads `writing-for-agents`, including
+  when it only reads and reports. The reviewed `retro` dependency edge stands.
+
+### Consumer migration
+
+None. No skill was added, removed, renamed, or moved, and no preset,
+dependency, ownership, or path behavior changed. `mattpack update` only replaces
+`wizard`'s `template.sh` with the fixed upstream bytes.
+
 ## 0.1.4
 
 - Add npm Trusted Publishing with provenance after the platform and Node.js

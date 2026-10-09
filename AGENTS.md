@@ -157,7 +157,7 @@ The current `upstream.lock.json` snapshot is:
   "upstreams": {
     "mattpocock/skills": {
       "repository": "https://github.com/mattpocock/skills.git",
-      "commit": "b0618bc436ad893b3c5e84e55fba86586d34a404",
+      "commit": "49dd158d1076134a641b33efb035946536778336",
       "vendorPath": "vendor/mattpocock-skills",
       "license": "MIT"
     }
