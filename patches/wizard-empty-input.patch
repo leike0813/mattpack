@@ -1,38 +1,42 @@
 diff --git a/skills/engineering/wizard/template.sh b/skills/engineering/wizard/template.sh
-index 081ed3d..728edf7 100644
+index 081ed3d..c7ffbe7 100644
 --- a/skills/engineering/wizard/template.sh
 +++ b/skills/engineering/wizard/template.sh
 @@ -93,2 +93,3 @@ confirm() {
  # quotes or a plain dotenv double-quoted value undone.
 +# Returns 1 if absent, 2 if the existing value cannot be decoded safely.
  _existing() {
-@@ -100,3 +101,3 @@ _existing() {
+@@ -97,2 +98,3 @@ _existing() {
+   value="${line#*=}"
++  value="${value%$'\r'}"
+   if [[ "$value" == \'*\' ]]; then value="${value:1:${#value}-2}"; value="${value//"$sq"/\'}"
+@@ -100,3 +102,3 @@ _existing() {
      value="${value:1:${#value}-2}"
 -    [[ "$value" == *[\\\$\"]* ]] && return 1   # escapes, $ or ": can't decode safely; ask again
 +    [[ "$value" == *[\\\$\"]* ]] && return 2   # escapes, $ or ": can't decode safely; ask again
    fi
-@@ -109,4 +110,4 @@ _existing() {
+@@ -109,4 +111,4 @@ _existing() {
  ask() {
 -  local key="$1" prompt="$2" current input s=$'\001' e=$'\002' p rc=0
 -  current=$(_existing "$key" || true)
 +  local key="$1" prompt="$2" current input s=$'\001' e=$'\002' p rc=0 existing_rc=0
 +  current=$(_existing "$key") || existing_rc=$?
    # Readline needs the colour codes wrapped in \001..\002 to place the cursor.
-@@ -116,2 +117,6 @@ ask() {
+@@ -116,2 +118,6 @@ ask() {
    if (( rc )) && [[ -z "$input" ]]; then return 1; fi
 +  if (( existing_rc == 2 )) && [[ -z "$input" ]]; then
 +    warn "Cannot keep the existing value for $key; re-run and enter a replacement." >&2
 +    return 1
 +  fi
    [[ -z "$input" && -n "$current" ]] && input="$current"
-@@ -122,4 +127,4 @@ ask() {
+@@ -122,4 +128,4 @@ ask() {
  ask_secret() {
 -  local key="$1" prompt="$2" current input rc=0
 -  current=$(_existing "$key" || true)
 +  local key="$1" prompt="$2" current input rc=0 existing_rc=0
 +  current=$(_existing "$key") || existing_rc=$?
    if [[ -n "$current" ]]; then
-@@ -132,2 +137,6 @@ ask_secret() {
+@@ -132,2 +138,6 @@ ask_secret() {
    if (( rc )) && [[ -z "$input" ]]; then return 1; fi
 +  if (( existing_rc == 2 )) && [[ -z "$input" ]]; then
 +    warn "Cannot keep the existing value for $key; re-run and enter a replacement." >&2

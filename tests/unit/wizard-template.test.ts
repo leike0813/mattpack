@@ -28,6 +28,8 @@ const cases: Scenario[] = [
   { name: "unquoted default", env: "KEY=old\n", input: "\n", result: "old" },
   { name: "single-quoted default", env: "KEY='old'\n", input: "\n", result: "old" },
   { name: "double-quoted default", env: 'KEY="old"\n', input: "\n", result: "old" },
+  { name: "CRLF double-quoted default", env: 'KEY="old"\r\n', input: "\n", result: "old" },
+  { name: "CRLF undecodable default rejects Enter", env: 'KEY="old$value"\r\n', input: "\n", result: null },
   { name: "empty default", env: 'KEY=""\n', input: "\n", result: "" },
   { name: "replace safe default", env: 'KEY="old"\n', input: "replacement\n", result: "replacement" },
   { name: "new file at EOF", env: null, input: "", result: null },

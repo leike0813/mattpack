@@ -18,6 +18,10 @@ it("preserves patch bytes with autocrlf enabled and fails unchanged when it no l
     execFileSync("git", ["-C", checkout, "config", "core.autocrlf", "true"]);
     await writeFile(path.join(checkout, "value.txt"), "before\n");
     await writeFile(path.join(root, "patches/fix.patch"), "--- a/value.txt\n+++ b/value.txt\n@@ -1 +1 @@\n-before\n+after\n");
+    await writeFile(path.join(root, ".gitattributes"), await readFile(new URL("../../../.gitattributes", import.meta.url)));
+    execFileSync("git", ["init", "--quiet", root]);
+    execFileSync("git", ["-c", "core.autocrlf=true", "-C", root, "add", ".gitattributes", "patches/fix.patch"]);
+    execFileSync("git", ["-c", "core.autocrlf=true", "-C", root, "checkout-index", "--force", "--all"]);
     await applyUpstreamPatches(checkout, root, ["patches/fix.patch"]);
     assert.equal(await readFile(path.join(checkout, "value.txt"), "utf8"), "after\n");
     await assert.rejects(applyUpstreamPatches(checkout, root, ["patches/fix.patch"]));

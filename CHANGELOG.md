@@ -17,7 +17,8 @@
   template. `ask` and `ask_secret` reject empty input when an existing
   double-quoted `.env` value contains a backslash, `$`, or an embedded double
   quote and cannot be decoded safely. The wizard stops before `write_env`
-  can replace that value. Normal Enter-keeps-current, non-empty replacement,
+  can replace that value, including in CRLF `.env` files. Patch sources retain
+  LF line endings on Windows. Normal Enter-keeps-current, non-empty replacement,
   and EOF behavior are preserved.
 - Upstream documents that `retro` always loads `writing-for-agents`, including
   when it only reads and reports. The reviewed `retro` dependency edge stands.

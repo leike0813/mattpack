@@ -96,6 +96,7 @@ _existing() {
   [[ -f "$ENV_FILE" ]] || return 1
   local line value sq="'\\''"; line=$(grep -E "^${1}=" "$ENV_FILE" | tail -n1) || return 1
   value="${line#*=}"
+  value="${value%$'\r'}"
   if [[ "$value" == \'*\' ]]; then value="${value:1:${#value}-2}"; value="${value//"$sq"/\'}"
   elif [[ "$value" == \"*\" ]]; then
     value="${value:1:${#value}-2}"
