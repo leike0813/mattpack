@@ -13,14 +13,25 @@
   `run_wizard` so editing the template mid-run cannot break a running wizard,
   screen clearing falls back to ANSI when `tput clear` fails, `write_env` also
   sets the shell variable, and an unused color variable is dropped.
+- Mattpack applies the authorized `wizard-empty-input.patch` to the pinned
+  template. `ask` and `ask_secret` reject empty input when an existing
+  double-quoted `.env` value contains a backslash, `$`, or an embedded double
+  quote and cannot be decoded safely. The wizard stops before `write_env`
+  can replace that value. Normal Enter-keeps-current, non-empty replacement,
+  and EOF behavior are preserved.
 - Upstream documents that `retro` always loads `writing-for-agents`, including
   when it only reads and reports. The reviewed `retro` dependency edge stands.
 
 ### Consumer migration
 
-None. No skill was added, removed, renamed, or moved, and no preset,
-dependency, ownership, or path behavior changed. `mattpack update` only replaces
-`wizard`'s `template.sh` with the fixed upstream bytes.
+No skill was added, removed, renamed, or moved, and no preset,
+dependency, ownership, or path behavior changed. `mattpack update` replaces
+`wizard`'s `template.sh` with the pinned template after the authorized
+Mattpack patch is applied.
+
+Existing generated wizard scripts and `.env` files are not rewritten by Mattpack.
+Regenerate an existing wizard script to receive the empty-input fix. `.env`
+files remain unchanged by the update itself.
 
 ## 0.1.4
 

@@ -44,6 +44,7 @@ This file is the product and engineering authority for the repository. When it c
 
 6. **Preserve upstream skills**
    - Copy complete upstream skill directories without renaming them.
+   - Preserve upstream files byte-for-byte except for patches explicitly listed in `upstream.lock.json`; normal installation copies the resulting bundled bytes.
    - Do not rewrite `SKILL.md`, frontmatter, scripts, templates, links, or `agents/openai.yaml` during normal installation.
    - Mattpack guarantees that dependencies are installed; it does not guarantee that every harness executes cross-skill calls identically.
 
@@ -89,8 +90,9 @@ Prioritize Claude Code, Codex/shared `.agents`, OpenCode, Pi, and Oh My Pi in th
 | Concern | Source of truth |
 |---|---|
 | Product invariants | `AGENTS.md` |
-| Upstream repository and commit | `upstream.lock.json` |
-| Bundled upstream bytes | `vendor/mattpocock-skills/` |
+| Upstream repository, commit, and authorized patch paths | `upstream.lock.json` |
+| Authorized upstream patch contents | Paths listed by `upstream.lock.json`, currently `patches/wizard-empty-input.patch` |
+| Generated bundled snapshot bytes | `vendor/mattpocock-skills/` |
 | Preset roots and aliases | `src/catalog/presets.ts` |
 | Cross-skill dependencies | `src/catalog/dependencies.ts` |
 | Harness paths and detection | `src/harnesses/registry.ts` and adapters |
@@ -159,7 +161,8 @@ The current `upstream.lock.json` snapshot is:
       "repository": "https://github.com/mattpocock/skills.git",
       "commit": "49dd158d1076134a641b33efb035946536778336",
       "vendorPath": "vendor/mattpocock-skills",
-      "license": "MIT"
+      "license": "MIT",
+      "patches": ["patches/wizard-empty-input.patch"]
     }
   }
 }
@@ -167,10 +170,12 @@ The current `upstream.lock.json` snapshot is:
 
 Rules:
 
-- Use the full 40-character commit SHA as the snapshot identity.
+- Use the full 40-character commit SHA as the upstream source identity; the bundled snapshot also includes the listed patches.
 - Never use a branch, tag, abbreviated SHA, date, or `latest` in the lock.
 - Vendor the selected commit into the npm package; do not clone or fetch it at consumer runtime.
-- Copy upstream files byte-for-byte and never execute upstream scripts.
+- Copy upstream files byte-for-byte except for explicitly listed patches. The current authorized patch is `patches/wizard-empty-input.patch`; maintenance automation must not add patches or broaden their scope on its own.
+- `sync:upstream` applies each listed patch, in lock order, to a temporary checkout of the exact commit using `git apply --check` before `git apply`, then validates and atomically installs the staged vendor snapshot. Consumer commands copy these bundled bytes and do not apply patches.
+- Never execute upstream scripts during synchronization. The explicitly authorized wizard helper behavior test may run in isolation with synthetic `.env` data and temporary files; do not run wizard stages or other upstream scripts, and do not use a browser, service, or real credentials.
 - Do not hand-edit `vendor/mattpocock-skills/`.
 - A consumer-side `mattpack update` reconciles against the snapshot bundled in the currently running Mattpack version, not GitHub HEAD.
 
@@ -604,7 +609,7 @@ The project owner authorizes the `matt-skills-monitor` skill to audit the observ
 
 Run in a dedicated clean linked worktree under a whole-run repository lock. Orca launches `omp`; the coordinator model is `minimax-code-cn/MiniMax-M3.1-Flash-Preview` with high reasoning, configured in that worktree's `.omp/config.yml`. Bind the `task`, `smol`, and `slow` model roles to the same model for bounded native workers and independent reviewers; verify the selected agent's role and resolved model before delegation. Orca registration and model configuration are covered in [docs/automations.md](docs/automations.md). Initial registration stays disabled until manually enabled after acceptance.
 
-Maintenance must preserve unrelated files and offline consumer operation. It cannot merge, publish npm, change package versions, install dependencies, advance the OpenSpec pin, force-push, reset user work or execute upstream scripts. Unresolved semantic or license changes produce a blocked report. Read [.agents/skills/matt-skills-monitor/SKILL.md](.agents/skills/matt-skills-monitor/SKILL.md) before starting or recovering a run.
+Maintenance must preserve unrelated files and offline consumer operation. It cannot merge, publish npm, change package versions, install dependencies, advance the OpenSpec pin, force-push, or reset user work. Do not execute upstream scripts except the explicitly authorized wizard helper behavior test in isolation with synthetic `.env` data and temporary files; do not run stages or other upstream scripts or use a browser, service, or real credentials. Unresolved semantic or license changes produce a blocked report. Read [.agents/skills/matt-skills-monitor/SKILL.md](.agents/skills/matt-skills-monitor/SKILL.md) before starting or recovering a run.
 
 ### npm release authority
 

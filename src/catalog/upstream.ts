@@ -16,6 +16,7 @@ export interface UpstreamLock {
     commit: string;
     vendorPath: string;
     license: "MIT";
+    patches?: readonly string[];
   }>;
 }
 
@@ -74,10 +75,17 @@ export async function loadUpstreamLock(packageRoot = packageRootFrom()): Promise
   if (path.isAbsolute(vendorPath) || vendorPath.split(/[\\/]/u).includes("..")) {
     invalid("Upstream vendorPath must stay inside the package");
   }
+  const patches = entry.patches;
+  if (patches !== undefined && (!Array.isArray(patches) || patches.some((patch: unknown) =>
+    typeof patch !== "string" || !patch.startsWith("patches/") || !patch.endsWith(".patch")
+    || patch.includes("\\") || patch.split("/").some((part) => part === ".." || part === "." || part === "")
+  ) || new Set(patches).size !== patches.length)) {
+    invalid("Upstream patches must be distinct relative patch files under patches/");
+  }
   return {
     schemaVersion: 1,
     upstreams: {
-      [UPSTREAM_ID]: { repository, commit, vendorPath, license }
+      [UPSTREAM_ID]: { repository, commit, vendorPath, license, ...(patches === undefined ? {} : { patches }) }
     }
   };
 }

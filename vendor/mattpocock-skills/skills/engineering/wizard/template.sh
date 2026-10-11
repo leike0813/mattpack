@@ -91,6 +91,7 @@ confirm() {
 
 # _existing KEY: current value of KEY in ENV_FILE, if any, with write_env's single
 # quotes or a plain dotenv double-quoted value undone.
+# Returns 1 if absent, 2 if the existing value cannot be decoded safely.
 _existing() {
   [[ -f "$ENV_FILE" ]] || return 1
   local line value sq="'\\''"; line=$(grep -E "^${1}=" "$ENV_FILE" | tail -n1) || return 1
@@ -98,7 +99,7 @@ _existing() {
   if [[ "$value" == \'*\' ]]; then value="${value:1:${#value}-2}"; value="${value//"$sq"/\'}"
   elif [[ "$value" == \"*\" ]]; then
     value="${value:1:${#value}-2}"
-    [[ "$value" == *[\\\$\"]* ]] && return 1   # escapes, $ or ": can't decode safely; ask again
+    [[ "$value" == *[\\\$\"]* ]] && return 2   # escapes, $ or ": can't decode safely; ask again
   fi
   printf '%s' "$value"
 }
@@ -107,21 +108,25 @@ _existing() {
 # a default on re-runs (Enter keeps it). Visible input (non-secret), edited
 # with Readline. Fails at EOF with no input.
 ask() {
-  local key="$1" prompt="$2" current input s=$'\001' e=$'\002' p rc=0
-  current=$(_existing "$key" || true)
+  local key="$1" prompt="$2" current input s=$'\001' e=$'\002' p rc=0 existing_rc=0
+  current=$(_existing "$key") || existing_rc=$?
   # Readline needs the colour codes wrapped in \001..\002 to place the cursor.
   p="  $s$BOLD$e$prompt$s$RESET$e "
   [[ -n "$current" ]] && p+="$s$DIM$e[Enter keeps current]$s$RESET$e "
   read -e -r -p "$p" input || rc=1
   if (( rc )) && [[ -z "$input" ]]; then return 1; fi
+  if (( existing_rc == 2 )) && [[ -z "$input" ]]; then
+    warn "Cannot keep the existing value for $key; re-run and enter a replacement." >&2
+    return 1
+  fi
   [[ -z "$input" && -n "$current" ]] && input="$current"
   printf -v "$key" '%s' "$input"
 }
 
 # ask_secret KEY "Prompt" is like ask, but input is hidden.
 ask_secret() {
-  local key="$1" prompt="$2" current input rc=0
-  current=$(_existing "$key" || true)
+  local key="$1" prompt="$2" current input rc=0 existing_rc=0
+  current=$(_existing "$key") || existing_rc=$?
   if [[ -n "$current" ]]; then
     printf '  %s%s%s %s[Enter keeps current]%s ' "$BOLD" "$prompt" "$RESET" "$DIM" "$RESET"
   else
@@ -130,6 +135,10 @@ ask_secret() {
   read -rs input || rc=1
   printf '\n'
   if (( rc )) && [[ -z "$input" ]]; then return 1; fi
+  if (( existing_rc == 2 )) && [[ -z "$input" ]]; then
+    warn "Cannot keep the existing value for $key; re-run and enter a replacement." >&2
+    return 1
+  fi
   [[ -z "$input" && -n "$current" ]] && input="$current"
   printf -v "$key" '%s' "$input"
 }

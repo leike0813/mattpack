@@ -6,6 +6,7 @@ const stable = catalog.byBucket.engineering.length + catalog.byBucket.productivi
 process.stdout.write(
   `${JSON.stringify({
     commit: catalog.lock.upstreams["mattpocock/skills"].commit,
+    patches: catalog.lock.upstreams["mattpocock/skills"].patches ?? [],
     stable,
     beta: catalog.byBucket["in-progress"].length,
     misc: catalog.byBucket.misc.length,
