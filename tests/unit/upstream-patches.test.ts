@@ -8,13 +8,14 @@ import { it } from "node:test";
 import { applyUpstreamPatches } from "../../scripts/lib/upstream-patches.js";
 import { loadUpstreamLock } from "../../src/catalog/upstream.js";
 
-it("applies a recorded patch and fails without changing files when it no longer applies", async () => {
+it("preserves patch bytes with autocrlf enabled and fails unchanged when it no longer applies", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mattpack-patch-"));
   try {
     const checkout = path.join(root, "checkout");
     await mkdir(checkout);
     await mkdir(path.join(root, "patches"));
     execFileSync("git", ["init", "--quiet", checkout]);
+    execFileSync("git", ["-C", checkout, "config", "core.autocrlf", "true"]);
     await writeFile(path.join(checkout, "value.txt"), "before\n");
     await writeFile(path.join(root, "patches/fix.patch"), "--- a/value.txt\n+++ b/value.txt\n@@ -1 +1 @@\n-before\n+after\n");
     await applyUpstreamPatches(checkout, root, ["patches/fix.patch"]);

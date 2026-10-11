@@ -8,7 +8,7 @@ export async function applyUpstreamPatches(
 ): Promise<void> {
   for (const patch of patches) {
     const patchFile = await assertContained(packageRoot, path.resolve(packageRoot, patch));
-    execFileSync("git", ["-C", checkout, "apply", "--check", "--", patchFile], { stdio: "pipe" });
-    execFileSync("git", ["-C", checkout, "apply", "--", patchFile], { stdio: "pipe" });
+    execFileSync("git", ["-c", "core.autocrlf=false", "-C", checkout, "apply", "--check", "--", patchFile], { stdio: "pipe" });
+    execFileSync("git", ["-c", "core.autocrlf=false", "-C", checkout, "apply", "--", patchFile], { stdio: "pipe" });
   }
 }

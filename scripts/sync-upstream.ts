@@ -29,6 +29,7 @@ function git(...args: string[]): Buffer {
 try {
   await mkdir(checkout, { recursive: true });
   git("init", "--quiet", checkout);
+  git("-C", checkout, "config", "core.autocrlf", "false");
   git("-C", checkout, "remote", "add", "origin", upstream.repository);
   git("-C", checkout, "fetch", "--quiet", "--depth=1", "origin", upstream.commit);
   git("-C", checkout, "checkout", "--quiet", "--detach", "FETCH_HEAD");
