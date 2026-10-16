@@ -62,7 +62,9 @@ try {
     "README.zh-CN.md",
     "upstream.lock.json",
     "vendor/mattpocock-skills/LICENSE",
-    "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md"
+    "vendor/mattpocock-skills/skills/engineering/tdd/SKILL.md",
+    "vendor/mattpocock-skills/skills/engineering/wizard/template.sh",
+    "patches/wizard-empty-input.patch"
   ]) {
     if (!files.has(required)) throw new Error("Packed artifact is missing " + required);
   }
@@ -83,7 +85,7 @@ try {
   const cli = path.join(installedPackageRoot, "dist", "cli.js");
   const common = ["--dir", projectRoot, "--json"];
 
-  const first = parseResult(await run(process.execPath, [cli, "init", "general", "--tools", "codex,minimax-code,warp", "--yes", ...common], installRoot));
+  const first = parseResult(await run(process.execPath, [cli, "init", "general", "--skills", "wizard", "--tools", "codex,minimax-code,warp", "--yes", ...common], installRoot));
   const firstResult = isRecord(first.result) ? first.result : undefined;
   const firstApplied = firstResult && isRecord(firstResult.applied) ? firstResult.applied : undefined;
   if (firstApplied?.changed !== true) throw new Error("Packed CLI did not install skills");
@@ -104,10 +106,17 @@ try {
   }
 
   const doctor = parseResult(await run(process.execPath, [cli, "doctor", ...common], installRoot));
+  const wizardPath = "skills/engineering/wizard/template.sh";
+  const bundledWizard = await readFile(path.join(packageRoot, "vendor/mattpocock-skills", wizardPath));
+  const packedWizard = await readFile(path.join(installedPackageRoot, "vendor/mattpocock-skills", wizardPath));
+  const installedWizard = await readFile(path.join(projectRoot, ".agents/skills/wizard/template.sh"));
+  if (!bundledWizard.equals(packedWizard) || !bundledWizard.equals(installedWizard)) {
+    throw new Error("Packed CLI did not preserve the generated wizard template");
+  }
   const doctorResult = isRecord(doctor.result) ? doctor.result : undefined;
   if (doctorResult?.healthy !== true) throw new Error("Packed CLI doctor did not report a healthy install");
 
-  const second = parseResult(await run(process.execPath, [cli, "init", "general", "--tools", "codex,minimax-code,warp", "--yes", ...common], installRoot));
+  const second = parseResult(await run(process.execPath, [cli, "init", "general", "--skills", "wizard", "--tools", "codex,minimax-code,warp", "--yes", ...common], installRoot));
   const secondResult = isRecord(second.result) ? second.result : undefined;
   const secondApplied = secondResult && isRecord(secondResult.applied) ? secondResult.applied : undefined;
   if (secondApplied?.changed !== false) throw new Error("Packed CLI reinstall was not idempotent");

@@ -14,11 +14,11 @@ Mattpack SHALL publish one ESM package named `mattpack` for Node.js 20 or newer 
 - **THEN** its binary can init, diagnose, reinstall idempotently, and remove a managed installation
 
 ### Requirement: Package contents
-The npm artifact SHALL include compiled runtime code, package metadata, documentation, licenses, upstream.lock.json, and the pinned vendored snapshot, and SHALL exclude references/OpenSpec, maintenance scripts, coordinator skills, local automation configuration, reports, and other development-only artifacts.
+The npm artifact SHALL include compiled runtime code, package metadata, documentation, licenses, upstream.lock.json, the pinned vendored snapshot, and the source files for patches listed in the lock, and SHALL exclude references/OpenSpec, maintenance scripts, coordinator skills, local automation configuration, reports, and other development-only artifacts.
 
 #### Scenario: Packed file list is inspected
 - **WHEN** pnpm test:pack reads npm's packed-file manifest
-- **THEN** required vendor files are present and development maintenance artifacts and the OpenSpec reference are absent
+- **THEN** required vendor files and locked patch sources are present and other development maintenance artifacts and the OpenSpec reference are absent
 
 ### Requirement: Offline expanded harness smoke test
 The packed CLI SHALL install new independent and shared-root harnesses with no network access and preserve healthy diagnosis, idempotent reinstall, and ownership-safe removal.
@@ -35,11 +35,11 @@ Mattpack SHALL record the exact upstream commit and MIT attribution and SHALL ke
 - **THEN** both fixed commits and their distinct bundled/reference roles are explicit
 
 ### Requirement: Upstream maintenance validation
-Developer scripts SHALL fetch only an explicitly locked commit, copy upstream files byte-for-byte without executing them, and validate paths, file types, frontmatter, source buckets, plugin membership, presets, and dependencies.
+Developer scripts SHALL fetch only an explicitly locked commit, apply only the patch paths explicitly listed for that upstream in the lock to a temporary checkout after `git apply --check`, and validate paths, file types, frontmatter, source buckets, plugin membership, presets, and dependencies. Unpatched upstream files remain byte-for-byte unchanged; consumer commands use the validated bundled snapshot without applying patches.
 
 #### Scenario: Upstream snapshot is regenerated
 - **WHEN** a maintainer intentionally changes the lock and runs the sync command
-- **THEN** a validated staged snapshot replaces the vendor tree as one operation
+- **THEN** listed patches have been applied in lock order, a validated staged snapshot replaces the vendor tree as one operation, and the package retains the patch sources recorded in the lock
 
 ### Requirement: Release gates
 The repository SHALL expose `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm test:pack`, and `pnpm check`, with CI running the complete check on Linux, macOS, and Windows.

@@ -23,7 +23,8 @@
     "README.zh-CN.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
-    "upstream.lock.json"
+    "upstream.lock.json",
+    "patches"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && node --input-type=module --eval \"import { build } from 'esbuild'; await build({ entryPoints: ['src/cli.ts'], bundle: true, platform: 'node', format: 'esm', target: 'node20', outfile: 'dist/cli.js', sourcemap: true, legalComments: 'eof', banner: { js: '\\\"use strict\\\"; import { createRequire } from \\\"node:module\\\"; const require = createRequire(import.meta.url);' } })\"",

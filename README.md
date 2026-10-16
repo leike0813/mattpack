@@ -140,7 +140,9 @@ The skills now use `GLOSSARY.md` and `GLOSSARY-MAP.md`. Rename existing `CONTEXT
 
 ## Bundled provenance
 
-This release bundles `mattpocock/skills` commit `b0618bc436ad893b3c5e84e55fba86586d34a404` under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Complete upstream skill directories are copied byte-for-byte; Mattpack does not execute upstream scripts.
+This release bundles `mattpocock/skills` commit `49dd158d1076134a641b33efb035946536778336` under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Complete skill directories are installed from the generated bundled snapshot; consumer commands do not execute upstream scripts.
+
+The snapshot includes reviewed Mattpack patches recorded in `upstream.lock.json`: `patches/wizard-empty-input.patch`. The wizard template rejects empty input when an existing value cannot be decoded safely. Existing generated scripts and `.env` files are not rewritten; regenerate the script to receive the fix.
 
 [OpenSpec](https://github.com/Fission-AI/OpenSpec) is pinned under `references/OpenSpec` as a development-only design reference. It is not a runtime dependency and is excluded from the npm package.
 

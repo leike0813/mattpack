@@ -4,6 +4,8 @@ import { chmod, copyFile, mkdir, mkdtemp, rename, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import { applyUpstreamPatches } from "./lib/upstream-patches.js";
+
 import {
   loadCatalogFromVendor,
   loadUpstreamLock,
@@ -27,11 +29,13 @@ function git(...args: string[]): Buffer {
 try {
   await mkdir(checkout, { recursive: true });
   git("init", "--quiet", checkout);
+  git("-C", checkout, "config", "core.autocrlf", "false");
   git("-C", checkout, "remote", "add", "origin", upstream.repository);
   git("-C", checkout, "fetch", "--quiet", "--depth=1", "origin", upstream.commit);
   git("-C", checkout, "checkout", "--quiet", "--detach", "FETCH_HEAD");
   const actualCommit = git("-C", checkout, "rev-parse", "HEAD").toString("utf8").trim();
   if (actualCommit !== upstream.commit) throw new Error(`Fetched ${actualCommit}, expected ${upstream.commit}`);
+  await applyUpstreamPatches(checkout, projectRoot, upstream.patches ?? []);
 
   const records = git("-C", checkout, "ls-tree", "-r", "-z", "HEAD").toString("utf8").split("\0");
   await mkdir(staging, { recursive: true });
@@ -72,7 +76,7 @@ try {
     throw error;
   }
   if (movedPrevious) await rm(previous, { recursive: true, force: true });
-  process.stdout.write(`${JSON.stringify({ commit: upstream.commit, skills: catalog.skills.size })}\n`);
+  process.stdout.write(`${JSON.stringify({ commit: upstream.commit, patches: upstream.patches ?? [], skills: catalog.skills.size })}\n`);
 } finally {
   await rm(staging, { recursive: true, force: true });
   await rm(temporaryRoot, { recursive: true, force: true });

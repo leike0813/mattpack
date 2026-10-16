@@ -14,7 +14,8 @@ disable-model-invocation: true
 
 - 不维护消费者项目中的 `.mattpack` 安装状态；消费者更新使用已发布 Mattpack 包的 `mattpack update`。
 - 不把上游仓库变成运行时网络依赖，不跟踪 branch、tag 或 `latest`。
-- 不改写、重命名、裁剪或翻译 vendor 中的上游 skill 内容。
+- 不改写、重命名、裁剪或翻译 vendor 中的上游 skill 内容；唯一文件例外是 lock 明确列出的授权补丁，当前为 `patches/wizard-empty-input.patch`。
+- 维护自动化不得自行新增补丁或扩大补丁范围。未被授权补丁触及的上游文件保持逐字节不变。
 - 不自动扩大 `default` 或 `general`；新 skill 是否加入这些显式 allowlist 是产品决策。
 - 不提交、推送或覆盖与本次更新无关的工作区改动。
 
@@ -94,7 +95,7 @@ git status --short
 
 ### 3. Change the lock
 
-只更新 `upstream.lock.json` 中 `mattpocock/skills.commit` 为目标 SHA。保留 `schemaVersion`、repository、vendorPath 和 license；不要引入第二个 upstream 记录或复制目标内容到其他手维护文件。
+只更新 `upstream.lock.json` 中 `mattpocock/skills.commit` 为目标 SHA。保留 `schemaVersion`、repository、vendorPath、license 和已审查的 `patches` 路径；不要引入第二个 upstream 记录或复制目标内容到其他手维护文件。
 
 修改后立即检查 JSON 和 diff：
 
@@ -113,7 +114,9 @@ git diff -- upstream.lock.json
 pnpm sync:upstream
 ```
 
-该命令会 fetch 精确 commit，把允许的 `LICENSE`、`.claude-plugin/plugin.json` 和四个 source bucket 复制到 staging，先完成目录校验，再原子替换 `vendor/mattpocock-skills/`。成功 stdout 是单行 JSON，至少包含 `commit` 和 `skills`。
+该命令会 fetch 精确 commit，在临时 checkout 中按 lock 顺序对列出的补丁先运行 `git apply --check` 再应用，然后把允许的 `LICENSE`、`.claude-plugin/plugin.json` 和四个 source bucket 复制到 staging，完成目录校验后原子替换 `vendor/mattpocock-skills/`。当前唯一授权补丁是 `patches/wizard-empty-input.patch`。消费者运行时只复制生成后的 vendor 文件，不应用补丁。成功 stdout 是单行 JSON，至少包含 `commit` 和 `skills`。
+
+不得运行上游脚本。仅可按本次明确授权隔离执行 wizard helper 行为测试，使用合成 `.env` 和临时文件；不得运行 stages 或其他上游脚本，也不得使用浏览器、服务或真实 credentials。
 
 成功条件：输出 commit 等于目标 SHA，且命令退出码为 0。脚本失败时不要手工复制、删除或修改 `vendor/mattpocock-skills/`；先按错误类型修复源 catalog 或目标选择，再重新运行。
 

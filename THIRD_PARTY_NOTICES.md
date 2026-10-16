@@ -3,7 +3,13 @@
 ## mattpocock/skills
 
 Mattpack bundles files from `mattpocock/skills` at commit
-`b0618bc436ad893b3c5e84e55fba86586d34a404`.
+`49dd158d1076134a641b33efb035946536778336`.
+
+The bundled `wizard` template includes the Mattpack-authorized fix in
+`patches/wizard-empty-input.patch`; this generated template is not an unmodified
+copy of the template at that upstream commit. Mattpack applies the listed patch
+while synchronizing the pinned snapshot. Consumer commands use the resulting
+bundled files directly.
 
 Copyright (c) 2026 Matt Pocock. Licensed under the MIT License. The complete
 license text is included at `vendor/mattpocock-skills/LICENSE`.
