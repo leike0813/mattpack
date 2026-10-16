@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.6
 
 - Advance the bundled `mattpocock/skills` snapshot from
   `b0618bc436ad893b3c5e84e55fba86586d34a404` to
