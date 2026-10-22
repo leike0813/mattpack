@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+- Advance the bundled `mattpocock/skills` snapshot from
+  `49dd158d1076134a641b33efb035946536778336` to
+  `5beb35b040e3de97e54fa9e386d7e42d15c295c2`. Preset roots, dependency edges,
+  expected counts, and licensing are unchanged; the only vendored difference is
+  prose inside the beta `chief-of-staff` skill. Mattpack still resolves the exact
+  bundled commit offline. [Upstream diff](https://github.com/mattpocock/skills/compare/49dd158d1076134a641b33efb035946536778336...5beb35b040e3de97e54fa9e386d7e42d15c295c2).
+- Upstream teaches `chief-of-staff` to keep its memory in a wiki of interlinked
+  pages and to write dated, commit-cited history instead of present-tense claims.
+  The reviewed dependency catalog is unchanged: the new prose mentions `retro`
+  and `writing-for-agents` only inside an example commit citation, and the
+  existing `retro` requires `writing-for-agents` edge already covers that relation.
+
+### Consumer migration
+
+No skill was added, removed, renamed, or moved, and no preset, dependency,
+ownership, or path behavior changed. `mattpack update` replaces
+`skills/in-progress/chief-of-staff/SKILL.md` with the newly pinned bytes.
+
 ## 0.1.6
 
 - Advance the bundled `mattpocock/skills` snapshot from

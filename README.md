@@ -140,7 +140,7 @@ The skills now use `GLOSSARY.md` and `GLOSSARY-MAP.md`. Rename existing `CONTEXT
 
 ## Bundled provenance
 
-This release bundles `mattpocock/skills` commit `49dd158d1076134a641b33efb035946536778336` under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Complete skill directories are installed from the generated bundled snapshot; consumer commands do not execute upstream scripts.
+This release bundles `mattpocock/skills` commit `5beb35b040e3de97e54fa9e386d7e42d15c295c2` under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Complete skill directories are installed from the generated bundled snapshot; consumer commands do not execute upstream scripts.
 
 The snapshot includes reviewed Mattpack patches recorded in `upstream.lock.json`: `patches/wizard-empty-input.patch`. The wizard template rejects empty input when an existing value cannot be decoded safely. Existing generated scripts and `.env` files are not rewritten; regenerate the script to receive the fix.
 
