@@ -140,7 +140,7 @@ Skill 现在使用 `GLOSSARY.md` 和 `GLOSSARY-MAP.md`。请按项目情况重�
 
 ## 随包上游来源
 
-本版本包含 `mattpocock/skills` 的 commit `49dd158d1076134a641b33efb035946536778336`，遵循 MIT 许可证。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。安装时复制生成后打包的完整 skill 目录；消费者命令不会执行上游脚本。
+本版本包含 `mattpocock/skills` 的 commit `5beb35b040e3de97e54fa9e386d7e42d15c295c2`，遵循 MIT 许可证。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。安装时复制生成后打包的完整 skill 目录；消费者命令不会执行上游脚本。
 
 快照包含 `upstream.lock.json` 记录的已审查 Mattpack 补丁：`patches/wizard-empty-input.patch`。wizard 模板在旧值无法安全解析时拒绝空输入。已有生成脚本和 `.env` 不会被自动改写；需重新生成脚本以获得修复。
 
