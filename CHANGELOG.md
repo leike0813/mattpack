@@ -3,6 +3,47 @@
 ## Unreleased
 
 - Advance the bundled `mattpocock/skills` snapshot from
+  `5beb35b040e3de97e54fa9e386d7e42d15c295c2` to
+  `4ae2317ddb22b046e26455e4f9c9b3aaaf62212d`. Mattpack still resolves the exact
+  bundled commit offline. [Upstream diff](https://github.com/mattpocock/skills/compare/5beb35b040e3de97e54fa9e386d7e42d15c295c2...4ae2317ddb22b046e26455e4f9c9b3aaaf62212d).
+- Upstream adds the beta `software-factory` skill, a glossary for designing a
+  software factory: the tasks it runs, the services they plug into, and product
+  surveys for each slot. It enters the dynamic `beta-only` and `everything`
+  presets only. The stable skill count stays at 27, so `full` and the curated
+  `default` and `general` allowlists are unchanged.
+- Upstream gives `chief-of-staff` a procedures section that reads `retro`,
+  `to-spec`, `to-tickets`, and `implement-spec` from sibling skill
+  directories. The reviewed dependency catalog gains one edge,
+  `chief-of-staff -> requires: implement-spec, retro, to-spec, to-tickets`, so
+  `beta-only` resolves those skills and their own dependencies instead of
+  pointing at files that are not installed.
+- Upstream tells the skills that dispatch subagents (`implement-spec`,
+  `code-review`, `codebase-design`, `improve-codebase-architecture`, `wayfinder`,
+  `research`, `grilling`, `chief-of-staff`) to start each one with a fresh
+  context window instead of forking the current conversation. This is prose
+  guidance inside the vendored skills and changes no Mattpack behavior.
+- Upstream refreshes the `setup-matt-pocock-skills` tracker templates: a
+  reachable repository is required before a GitHub or GitLab tracker is
+  written, legacy `CONTEXT.md` and `CONTEXT-MAP.md` files are offered a rename
+  to the `GLOSSARY` names, issues are filed only into the user's own
+  repository, and GitHub blocking dependencies use the native issue
+  dependency API.
+
+### Consumer migration
+
+`mattpack update` installs the beta `software-factory` skill for `beta-only`
+and `everything` consumers and replaces the vendored bytes of the skills that
+changed, including `skills/in-progress/chief-of-staff/SKILL.md`. `beta-only`
+now resolves 18 skills instead of 9, because `chief-of-staff` pulls in the
+procedures it reads from sibling directories; `everything` resolves 39 skills
+instead of 38. The `default`, `general`, and `full` presets are unchanged.
+
+No skill was removed, renamed, or moved, and no ownership, path, or offline
+behavior changed.
+
+## 0.1.7
+
+- Advance the bundled `mattpocock/skills` snapshot from
   `49dd158d1076134a641b33efb035946536778336` to
   `5beb35b040e3de97e54fa9e386d7e42d15c295c2`. Preset roots, dependency edges,
   expected counts, and licensing are unchanged; the only vendored difference is

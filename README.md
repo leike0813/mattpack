@@ -33,8 +33,8 @@ npx @leike0813/mattpack@0.1.7 init --tools codex
 | `default` | `developing`<br>`dev` | Curated day-to-day software development | 12 | `codebase-design (requires)`<br>`domain-modeling (requires)`<br>`grilling (requires)` | 15 |
 | `general` | — | Lightweight general planning and agent workflow support | 5 | `grilling (requires)` | 6 |
 | `full` | — | All promoted stable skills | 27 | — | 27 |
-| `beta-only` | `in-progress` | All beta roots plus required stable dependencies | 7 | `codebase-design (requires)`<br>`grilling (requires)` | 9 |
-| `everything` | `beta`<br>`experimental` | All promoted, in-progress, and misc skills | 38 | — | 38 |
+| `beta-only` | `in-progress` | All beta roots plus required stable dependencies | 8 | `code-review (requires)`<br>`codebase-design (requires)`<br>`grilling (requires)`<br>`implement-spec (requires)`<br>`retro (requires)`<br>`setup-matt-pocock-skills (setupCompanion)`<br>`tdd (requires)`<br>`to-spec (requires)`<br>`to-tickets (requires)`<br>`writing-for-agents (requires)` | 18 |
+| `everything` | `beta`<br>`experimental` | All promoted, in-progress, and misc skills | 39 | — | 39 |
 
 A preset selects roots. Add individual roots with `--skills <comma-separated ids>` or the interactive skill catalog. Mattpack recursively adds declared `requires` and `setupCompanion` skills, reports why each was added, deduplicates the result, and rejects missing nodes or cycles. `beta-only` has beta roots but may add stable dependencies. Use `--no-deps` only when you accept a potentially unusable installation.
 
@@ -140,7 +140,7 @@ The skills now use `GLOSSARY.md` and `GLOSSARY-MAP.md`. Rename existing `CONTEXT
 
 ## Bundled provenance
 
-This release bundles `mattpocock/skills` commit `5beb35b040e3de97e54fa9e386d7e42d15c295c2` under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Complete skill directories are installed from the generated bundled snapshot; consumer commands do not execute upstream scripts.
+This release bundles `mattpocock/skills` commit `4ae2317ddb22b046e26455e4f9c9b3aaaf62212d` under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Complete skill directories are installed from the generated bundled snapshot; consumer commands do not execute upstream scripts.
 
 The snapshot includes reviewed Mattpack patches recorded in `upstream.lock.json`: `patches/wizard-empty-input.patch`. The wizard template rejects empty input when an existing value cannot be decoded safely. Existing generated scripts and `.env` files are not rewritten; regenerate the script to receive the fix.
 

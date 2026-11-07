@@ -33,8 +33,8 @@ npx @leike0813/mattpack@0.1.7 init --tools codex
 | `default` | `developing`<br>`dev` | 精选的日常软件开发 skill | 12 | `codebase-design (requires)`<br>`domain-modeling (requires)`<br>`grilling (requires)` | 15 |
 | `general` | — | 轻量级通用规划和 agent 工作流支持 | 5 | `grilling (requires)` | 6 |
 | `full` | — | 所有已推广的稳定 skill | 27 | — | 27 |
-| `beta-only` | `in-progress` | 所有 beta root 以及所需的 stable 依赖 | 7 | `codebase-design (requires)`<br>`grilling (requires)` | 9 |
-| `everything` | `beta`<br>`experimental` | 所有已推广、in-progress 和 misc skill | 38 | — | 38 |
+| `beta-only` | `in-progress` | 所有 beta root 以及所需的 stable 依赖 | 8 | `code-review (requires)`<br>`codebase-design (requires)`<br>`grilling (requires)`<br>`implement-spec (requires)`<br>`retro (requires)`<br>`setup-matt-pocock-skills (setupCompanion)`<br>`tdd (requires)`<br>`to-spec (requires)`<br>`to-tickets (requires)`<br>`writing-for-agents (requires)` | 18 |
+| `everything` | `beta`<br>`experimental` | 所有已推广、in-progress 和 misc skill | 39 | — | 39 |
 
 Preset 选择 root。可以通过 `--skills <逗号分隔的 id>` 或交互式 skill catalog 添加单独的 root。Mattpack 会递归加入声明为 `requires` 和 `setupCompanion` 的 skill，说明每个新增 skill 的原因，去重结果，并拒绝缺失节点或循环依赖。`beta-only` 的 root 只来自 beta，但仍可能加入 stable 依赖。只有在接受安装结果可能不可用时才使用 `--no-deps`。
 
@@ -140,7 +140,7 @@ Skill 现在使用 `GLOSSARY.md` 和 `GLOSSARY-MAP.md`。请按项目情况重�
 
 ## 随包上游来源
 
-本版本包含 `mattpocock/skills` 的 commit `5beb35b040e3de97e54fa9e386d7e42d15c295c2`，遵循 MIT 许可证。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。安装时复制生成后打包的完整 skill 目录；消费者命令不会执行上游脚本。
+本版本包含 `mattpocock/skills` 的 commit `4ae2317ddb22b046e26455e4f9c9b3aaaf62212d`，遵循 MIT 许可证。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。安装时复制生成后打包的完整 skill 目录；消费者命令不会执行上游脚本。
 
 快照包含 `upstream.lock.json` 记录的已审查 Mattpack 补丁：`patches/wizard-empty-input.patch`。wizard 模板在旧值无法安全解析时拒绝空输入。已有生成脚本和 `.env` 不会被自动改写；需重新生成脚本以获得修复。
 
