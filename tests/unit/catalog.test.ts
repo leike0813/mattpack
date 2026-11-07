@@ -12,9 +12,9 @@ describe("upstream catalog and presets", () => {
   it("validates the pinned snapshot and resolves every preset", async () => {
     const catalog = await loadUpstreamCatalog(fileURLToPath(new URL("../../../", import.meta.url)));
     const available = new Set(catalog.skills.keys());
-    assert.equal(catalog.skills.size, 38);
+    assert.equal(catalog.skills.size, 39);
     assert.equal(catalog.byBucket.engineering.length + catalog.byBucket.productivity.length, 27);
-    assert.equal(catalog.byBucket["in-progress"].length, 7);
+    assert.equal(catalog.byBucket["in-progress"].length, 8);
     assert.equal(catalog.byBucket.misc.length, 4);
 
     assert.equal(canonicalPreset("dev"), "default");
@@ -26,9 +26,9 @@ describe("upstream catalog and presets", () => {
     assert.equal(resolveSkillSet(presetRoots("default", catalog), available, SKILL_DEPENDENCIES).skills.length, 15);
     assert.equal(resolveSkillSet(presetRoots("general", catalog), available, SKILL_DEPENDENCIES).skills.length, 6);
     assert.equal(presetRoots("full", catalog).length, 27);
-    assert.equal(presetRoots("beta-only", catalog).length, 7);
-    assert.equal(resolveSkillSet(presetRoots("beta-only", catalog), available, SKILL_DEPENDENCIES).skills.length, 9);
-    assert.equal(presetRoots("everything", catalog).length, 38);
+    assert.equal(presetRoots("beta-only", catalog).length, 8);
+    assert.equal(resolveSkillSet(presetRoots("beta-only", catalog), available, SKILL_DEPENDENCIES).skills.length, 18);
+    assert.equal(presetRoots("everything", catalog).length, 39);
     assert.equal(presetRoots("default", catalog).includes("resolving-merge-conflicts"), false);
     assert.equal(presetRoots("default", catalog).length, 12);
     assert.equal(presetRoots("general", catalog).length, 5);
@@ -49,7 +49,7 @@ describe("upstream catalog and presets", () => {
 
   it("exposes descriptions and derives preset relationships", async () => {
     const skills = await skillSelectionCatalog(fileURLToPath(new URL("../../../", import.meta.url)));
-    assert.equal(skills.length, 38);
+    assert.equal(skills.length, 39);
     assert.equal(skills.every((skill) => skill.description.length > 0), true);
 
     const grilling = skills.find((skill) => skill.name === "grilling");
@@ -59,5 +59,20 @@ describe("upstream catalog and presets", () => {
     const teach = skills.find((skill) => skill.name === "teach");
     assert.equal(teach?.relations.find((item) => item.preset === "default")?.relation, "none");
     assert.equal(teach?.relations.find((item) => item.preset === "everything")?.relation, "root");
+  });
+
+  it("resolves the procedures chief-of-staff reads from sibling skills", async () => {
+    const catalog = await loadUpstreamCatalog(fileURLToPath(new URL("../../../", import.meta.url)));
+    const available = new Set(catalog.skills.keys());
+    const resolved = resolveSkillSet(presetRoots("beta-only", catalog), available, SKILL_DEPENDENCIES);
+
+    for (const procedure of ["retro", "to-spec", "to-tickets", "implement-spec"]) {
+      assert.equal(resolved.skills.includes(procedure), true);
+    }
+
+    const additions = new Map(resolved.dependencies.map((item) => [item.name, item]));
+    assert.equal(additions.get("retro")?.chain.join(" -> "), "chief-of-staff -> retro");
+    assert.equal(additions.get("writing-for-agents")?.chain.join(" -> "), "chief-of-staff -> retro -> writing-for-agents");
+    assert.equal(additions.get("tdd")?.chain.join(" -> "), "chief-of-staff -> implement-spec -> tdd");
   });
 });

@@ -29,9 +29,9 @@ Mattpack SHALL expose `default`, `general`, `full`, `beta-only`, and `everything
 - **THEN** roots are discovered from the allowed stable, in-progress, and misc buckets and deprecated or out-of-scope content is excluded
 
 #### Scenario: Audited snapshot is selected
-- **WHEN** the bundled upstream commit is `5beb35b040e3de97e54fa9e386d7e42d15c295c2` and dependencies are enabled
-- **THEN** `default`, `general`, `full`, `beta-only`, and `everything` resolve to 15, 6, 27, 9, and 38 skills respectively
-- **AND** `beta-only` distinguishes its seven beta roots from its two stable dependencies
+- **WHEN** the bundled upstream commit is `4ae2317ddb22b046e26455e4f9c9b3aaaf62212d` and dependencies are enabled
+- **THEN** `default`, `general`, `full`, `beta-only`, and `everything` resolve to 15, 6, 27, 18, and 39 skills respectively
+- **AND** `beta-only` distinguishes its eight beta roots from its ten stable dependencies
 
 #### Scenario: Promoted and new skills follow their buckets
 - **WHEN** a user resolves the audited snapshot's dynamic presets

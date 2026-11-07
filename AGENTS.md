@@ -159,7 +159,7 @@ The current `upstream.lock.json` snapshot is:
   "upstreams": {
     "mattpocock/skills": {
       "repository": "https://github.com/mattpocock/skills.git",
-      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "commit": "4ae2317ddb22b046e26455e4f9c9b3aaaf62212d",
       "vendorPath": "vendor/mattpocock-skills",
       "license": "MIT",
       "patches": ["patches/wizard-empty-input.patch"]
@@ -323,7 +323,7 @@ Alias: `in-progress`.
 
 Purpose: all roots under `skills/in-progress/*/SKILL.md`, plus required stable dependencies and setup companions.
 
-Expected beta root count at the current pin: **7**. With dependencies enabled, the resolved count is **9**.
+Expected beta root count at the current pin: **8**. With dependencies enabled, the resolved count is **18**.
 
 `beta-only` means “only beta roots,” not “forbid stable dependencies.” Human and JSON output must distinguish the beta roots from stable additions.
 
@@ -337,7 +337,7 @@ Purpose:
 promoted + in-progress + misc
 ```
 
-Expected count at the current pin: **38**.
+Expected count at the current pin: **39**.
 
 `everything` is canonical because `misc` is not semantically beta; `beta` remains the user-facing alias from the original design.
 
@@ -388,6 +388,7 @@ setup-ts-deep-modules            -> requires: codebase-design
 implement-spec                   -> requires: tdd, code-review
                                   setup: setup-matt-pocock-skills
 retro                            -> requires: writing-for-agents
+chief-of-staff                   -> requires: implement-spec, retro, to-spec, to-tickets
 ```
 
 Dependency resolution must be recursive, deterministic, deduplicated, cycle-checked, and explainable. Preserve a reason chain for each added skill and fail before writing if any node is missing.

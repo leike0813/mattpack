@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, test } from "node:test";
 
-import { MonitorError, runUpstreamMonitor, type MonitorCommandRunner } from "../../scripts/lib/upstream-monitor.js";
+import { MonitorError, runUpstreamMonitor, systemCommand, type MonitorCommandRunner } from "../../scripts/lib/upstream-monitor.js";
 
 const roots: string[] = [];
 const mattpackOrigin = "https://github.com/leike0813/mattpack.git";
@@ -104,7 +104,12 @@ async function fixture(): Promise<Fixture> {
 
   return {
     root, primary: projectSeed, projectSeed, linked, common: commonDir, projectBare, upstreamBare, pinned, target,
-    runner: ({ observed = pinned, prs = "[]", failGh = false } = {}) => async (program, args, cwd) => {
+    runner: ({ observed = pinned, prs = "[]", failGh = false } = {}) => async (program, args, cwd, options) => {
+      const raw = options?.raw === true;
+      const gitOutput = (...gitArgs: string[]): string => {
+        const stdout = execFileSync("git", gitArgs, { cwd, encoding: "utf8" });
+        return raw ? stdout : stdout.trim();
+      };
       if (program === "gh") {
         if (failGh) throw new Error("mock GitHub query failed");
         return prs;
@@ -112,19 +117,19 @@ async function fixture(): Promise<Fixture> {
       if (program === "git" && args[0] === "remote" && args[1] === "get-url") return mattpackOrigin;
       if (program === "git" && args[0] === "fetch" && args[1] === "origin"
           && args[2] === "refs/heads/main:refs/remotes/origin/main") {
-        return execFileSync("git", ["fetch", projectBare, "refs/heads/main:refs/remotes/origin/main"], { cwd, encoding: "utf8" }).trim();
+        return gitOutput("fetch", projectBare, "refs/heads/main:refs/remotes/origin/main");
       }
       if (program === "git" && args[0] === "ls-remote") return `${observed}\trefs/heads/main`;
       if (program === "git" && args[0] === "fetch" && args[1] === "origin" && typeof args[2] === "string" && args[2].startsWith("refs/heads/")) {
-        return execFileSync("git", ["fetch", projectBare, args[2]], { cwd, encoding: "utf8" }).trim();
+        return gitOutput("fetch", projectBare, args[2]);
       }
       if (program === "git" && args[0] === "--git-dir" && args[2] === "fetch") {
         const mapped = [...args];
         const remoteIndex = mapped.indexOf(skillsOrigin);
         if (remoteIndex !== -1) mapped[remoteIndex] = upstreamBare;
-        return execFileSync("git", mapped, { cwd, encoding: "utf8" }).trim();
+        return gitOutput(...mapped);
       }
-      return execFileSync(program, [...args], { cwd, encoding: "utf8" }).trim();
+      return gitOutput(...args);
     }
   };
 }
@@ -252,6 +257,52 @@ test("fetches both exact SHAs and records the complete upstream evidence", async
   const audit = JSON.parse(await readFile(result.auditPath, "utf8")) as { nameStatus: string; log: string };
   assert.match(audit.nameStatus, /A\s+new\.md/u);
   assert.match(audit.log, /target/u);
+});
+
+test("keeps exact bytes when the default runner is asked for raw output", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "mattpack-monitor-raw-"));
+  roots.push(root);
+  await writeFile(path.join(root, "value.txt"), "line with trailing space \n");
+  git(root, "init", "--quiet");
+  git(root, "config", "user.name", "Fixture");
+  git(root, "config", "user.email", "fixture@example.test");
+  git(root, "add", "value.txt");
+  git(root, "commit", "--quiet", "-m", "pinned");
+  const base = git(root, "rev-parse", "HEAD");
+  await writeFile(path.join(root, "value.txt"), "line with trailing space \nsecond\n");
+  git(root, "add", "value.txt");
+  git(root, "commit", "--quiet", "-m", "target");
+  const target = git(root, "rev-parse", "HEAD");
+
+  const raw = await systemCommand("git", ["diff", base, target], root, { raw: true });
+  assert.equal(raw.endsWith("\n"), true);
+  assert.match(raw, /\+second\n/u);
+
+  const trimmed = await systemCommand("git", ["diff", base, target], root);
+  assert.equal(trimmed.endsWith("\n"), false);
+});
+
+test("records an upstream diff that stays appliable", async () => {
+  const f = await fixture();
+  const result = await runUpstreamMonitor({ command: "start", ownerPid: process.pid }, {
+    cwd: f.linked, execute: f.runner({ observed: f.target })
+  }) as { diffPath: string };
+  const diff = await readFile(result.diffPath, "utf8");
+  assert.equal(diff.endsWith("\n"), true);
+  assert.equal(diff.includes("\n\n"), false);
+
+  const applyRoot = path.join(f.root, "apply-check");
+  await mkdir(applyRoot, { recursive: true });
+  await writeFile(path.join(applyRoot, "skill.md"), "pinned bytes\n");
+  git(applyRoot, "init", "--quiet");
+  git(applyRoot, "config", "user.name", "Fixture");
+  git(applyRoot, "config", "user.email", "fixture@example.test");
+  git(applyRoot, "add", "skill.md");
+  git(applyRoot, "commit", "--quiet", "-m", "pinned");
+  execFileSync("git", ["apply", "--check", result.diffPath], { cwd: applyRoot, encoding: "utf8" });
+  execFileSync("git", ["apply", result.diffPath], { cwd: applyRoot, encoding: "utf8" });
+  assert.equal(await readFile(path.join(applyRoot, "skill.md"), "utf8"), "target bytes\n");
+  assert.equal(await readFile(path.join(applyRoot, "new.md"), "utf8"), "new file\n");
 });
 
 test("fails closed on contention, PR query errors, corrupt locks, and mismatched recovery", async () => {

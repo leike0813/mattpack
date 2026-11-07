@@ -13,7 +13,7 @@ const BRANCH_PREFIX = "automation/matt-skills-monitor/";
 const FULL_SHA = /^[0-9a-f]{40}$/u;
 const RUN_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 
-export type MonitorCommandRunner = (command: string, args: readonly string[], cwd: string) => Promise<string>;
+export type MonitorCommandRunner = (command: string, args: readonly string[], cwd: string, options?: { raw?: boolean }) => Promise<string>;
 export type MonitorCommand =
   | { command: "start"; ownerPid: number; baseRef?: string }
   | { command: "status" }
@@ -56,12 +56,13 @@ function ownerAlive(pid: number): boolean {
   catch (error) { return isRecord(error) && error.code === "EPERM"; }
 }
 
-const systemCommand: MonitorCommandRunner = async (name, args, cwd) => {
+export const systemCommand: MonitorCommandRunner = async (name, args, cwd, options) => {
   try {
     const { stdout } = await execFileAsync(name, [...args], {
       cwd, encoding: "utf8", maxBuffer: 32 * 1024 * 1024
     });
-    return stdout.trimEnd();
+    // Patch output must keep its exact bytes, including the trailing newline, so it stays appliable.
+    return options?.raw ? stdout : stdout.trimEnd();
   } catch (error) {
     fail("COMMAND_FAILED", `${name} ${args[0] ?? ""} failed: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -388,7 +389,7 @@ async function start(cwd: string, ownerPid: number, baseRef: string, run: Monito
         if (fetched !== sha) fail("FETCH_MISMATCH", `Fetched ${fetched}; expected ${sha}`);
       }
       const prefix = ["--git-dir", objectStore];
-      const diff = await run("git", [...prefix, "diff", "--binary", "--no-ext-diff", "--no-renames", "--no-color", pinnedCommit, targetCommit], repo.root);
+      const diff = await run("git", [...prefix, "diff", "--binary", "--no-ext-diff", "--no-renames", "--no-color", pinnedCommit, targetCommit], repo.root, { raw: true });
       const nameStatus = await run("git", [...prefix, "diff", "--name-status", "--no-renames", pinnedCommit, targetCommit], repo.root);
       const stat = await run("git", [...prefix, "diff", "--stat", pinnedCommit, targetCommit], repo.root);
       const log = await run("git", [...prefix, "log", "--oneline", "--no-decorate", `${pinnedCommit}..${targetCommit}`], repo.root);
