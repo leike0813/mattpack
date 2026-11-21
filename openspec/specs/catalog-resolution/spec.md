@@ -29,7 +29,7 @@ Mattpack SHALL expose `default`, `general`, `full`, `beta-only`, and `everything
 - **THEN** roots are discovered from the allowed stable, in-progress, and misc buckets and deprecated or out-of-scope content is excluded
 
 #### Scenario: Audited snapshot is selected
-- **WHEN** the bundled upstream commit is `4ae2317ddb22b046e26455e4f9c9b3aaaf62212d` and dependencies are enabled
+- **WHEN** the bundled upstream commit is `abeeaf95660ba9e8b7c753eb38f441ca707a8823` and dependencies are enabled
 - **THEN** `default`, `general`, `full`, `beta-only`, and `everything` resolve to 15, 6, 27, 18, and 39 skills respectively
 - **AND** `beta-only` distinguishes its eight beta roots from its ten stable dependencies
 

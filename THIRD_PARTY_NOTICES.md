@@ -3,7 +3,7 @@
 ## mattpocock/skills
 
 Mattpack bundles files from `mattpocock/skills` at commit
-`4ae2317ddb22b046e26455e4f9c9b3aaaf62212d`.
+`abeeaf95660ba9e8b7c753eb38f441ca707a8823`.
 
 The bundled `wizard` template includes the Mattpack-authorized fix in
 `patches/wizard-empty-input.patch`; this generated template is not an unmodified

@@ -3,6 +3,28 @@
 ## Unreleased
 
 - Advance the bundled `mattpocock/skills` snapshot from
+  `4ae2317ddb22b046e26455e4f9c9b3aaaf62212d` to
+  `abeeaf95660ba9e8b7c753eb38f441ca707a8823`. Mattpack still resolves the exact
+  bundled commit offline. [Upstream diff](https://github.com/mattpocock/skills/compare/4ae2317ddb22b046e26455e4f9c9b3aaaf62212d...abeeaf95660ba9e8b7c753eb38f441ca707a8823).
+- Upstream quotes the beta `software-factory` skill's description, because the
+  colon inside it made strict YAML frontmatter parsers read the value as a
+  nested mapping and skip the skill. Installers that parse frontmatter strictly
+  now install it. Mattpack copies skill directories byte for byte and already
+  read both spellings, so the catalog, the dependency edges, and the preset
+  membership are unchanged: the stable count stays at 27, `full` still resolves
+  27 skills, and the curated `default` and `general` allowlists are unchanged.
+- Upstream adds a CI job that parses every `SKILL.md` frontmatter with the
+  installer's YAML parser, together with the upstream package's own workflow,
+  checker script, and dev dependency. These files live outside the vendored
+  skill buckets, so neither the bundled snapshot nor the npm package changes
+  because of them.
+- Upstream rewords the beta `software-factory` glossary so "task" is not
+  confused with a CI vendor's job, and describes what the explore task does
+  with a ticket: it checks the ticket's claims against the codebase, reproduces
+  them where it can, and leaves its findings on the ticket without pushing. The
+  change is prose inside the vendored skill. It names no other Matt skill and
+  reads no sibling `SKILL.md`, so the dependency catalog is unchanged.
+- Advance the bundled `mattpocock/skills` snapshot from
   `5beb35b040e3de97e54fa9e386d7e42d15c295c2` to
   `4ae2317ddb22b046e26455e4f9c9b3aaaf62212d`. Mattpack still resolves the exact
   bundled commit offline. [Upstream diff](https://github.com/mattpocock/skills/compare/5beb35b040e3de97e54fa9e386d7e42d15c295c2...4ae2317ddb22b046e26455e4f9c9b3aaaf62212d).
