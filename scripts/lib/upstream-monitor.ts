@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { lstat, mkdir, readFile, realpath, rename, rm, rmdir, writeFile } from "node:fs/promises";
+import { constants } from "node:fs";
+import { copyFile, lstat, mkdir, readFile, realpath, rename, rm, rmdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -388,12 +389,16 @@ async function start(cwd: string, ownerPid: number, baseRef: string, run: Monito
         if (fetched !== sha) fail("FETCH_MISMATCH", `Fetched ${fetched}; expected ${sha}`);
       }
       const prefix = ["--git-dir", objectStore];
-      const diff = await run("git", [...prefix, "diff", "--binary", "--no-ext-diff", "--no-renames", "--no-color", pinnedCommit, targetCommit], repo.root);
+      const patchFile = path.join(tempPath, "upstream.diff");
+      await run("git", [
+        ...prefix, "diff", "--binary", "--no-ext-diff", "--no-renames", "--no-color",
+        "--src-prefix=a/", "--dst-prefix=b/", `--output=${patchFile}`, pinnedCommit, targetCommit
+      ], repo.root);
       const nameStatus = await run("git", [...prefix, "diff", "--name-status", "--no-renames", pinnedCommit, targetCommit], repo.root);
       const stat = await run("git", [...prefix, "diff", "--stat", pinnedCommit, targetCommit], repo.root);
       const log = await run("git", [...prefix, "log", "--oneline", "--no-decorate", `${pinnedCommit}..${targetCommit}`], repo.root);
       await reportDirectory(repo.root, runId);
-      await writeFile(lock.diffPath!, diff, { flag: "wx" });
+      await copyFile(patchFile, lock.diffPath!, constants.COPYFILE_EXCL);
       await writeJson(auditPath, { runId, projectRoot: repo.root, ownerPid, baseRef, branch, pinnedCommit, targetCommit, changed, auditPath, diffPath: lock.diffPath, nameStatus, stat, log, observedAt: new Date().toISOString() });
     } else {
       await writeJson(auditPath, { runId, projectRoot: repo.root, ownerPid, baseRef, branch, pinnedCommit, targetCommit, changed, auditPath, observedAt: new Date().toISOString() });

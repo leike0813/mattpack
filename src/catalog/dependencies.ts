@@ -29,5 +29,8 @@ export const SKILL_DEPENDENCIES: Readonly<Record<string, SkillDependency>> = {
     requires: ["tdd", "code-review"],
     setupCompanions: ["setup-matt-pocock-skills"]
   },
-  retro: { requires: ["writing-for-agents"] }
+  retro: { requires: ["writing-for-agents"] },
+  "chief-of-staff": {
+    requires: ["implement-spec", "retro", "to-spec", "to-tickets"]
+  }
 };

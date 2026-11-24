@@ -11,6 +11,7 @@ import { MonitorError, runUpstreamMonitor, type MonitorCommandRunner } from "../
 const roots: string[] = [];
 const mattpackOrigin = "https://github.com/leike0813/mattpack.git";
 const skillsOrigin = "https://github.com/mattpocock/skills.git";
+const newFileBytes = Buffer.from("caf\xe9\n", "latin1");
 
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
@@ -83,7 +84,7 @@ async function fixture(): Promise<Fixture> {
   await writeFile(path.join(upstreamSeed, "skill.md"), "pinned bytes\n");
   const pinned = commit(upstreamSeed, "pinned");
   await writeFile(path.join(upstreamSeed, "skill.md"), "target bytes\n");
-  await writeFile(path.join(upstreamSeed, "new.md"), "new file\n");
+  await writeFile(path.join(upstreamSeed, "new.md"), newFileBytes);
   const target = commit(upstreamSeed, "target");
   git(root, "init", "--bare", upstreamBare);
   git(upstreamSeed, "remote", "add", "origin", upstreamBare);
@@ -112,17 +113,17 @@ async function fixture(): Promise<Fixture> {
       if (program === "git" && args[0] === "remote" && args[1] === "get-url") return mattpackOrigin;
       if (program === "git" && args[0] === "fetch" && args[1] === "origin"
           && args[2] === "refs/heads/main:refs/remotes/origin/main") {
-        return execFileSync("git", ["fetch", projectBare, "refs/heads/main:refs/remotes/origin/main"], { cwd, encoding: "utf8" }).trim();
+        return git(cwd, "fetch", projectBare, "refs/heads/main:refs/remotes/origin/main");
       }
       if (program === "git" && args[0] === "ls-remote") return `${observed}\trefs/heads/main`;
       if (program === "git" && args[0] === "fetch" && args[1] === "origin" && typeof args[2] === "string" && args[2].startsWith("refs/heads/")) {
-        return execFileSync("git", ["fetch", projectBare, args[2]], { cwd, encoding: "utf8" }).trim();
+        return git(cwd, "fetch", projectBare, args[2]);
       }
       if (program === "git" && args[0] === "--git-dir" && args[2] === "fetch") {
         const mapped = [...args];
         const remoteIndex = mapped.indexOf(skillsOrigin);
         if (remoteIndex !== -1) mapped[remoteIndex] = upstreamBare;
-        return execFileSync("git", mapped, { cwd, encoding: "utf8" }).trim();
+        return git(cwd, ...mapped);
       }
       return execFileSync(program, [...args], { cwd, encoding: "utf8" }).trim();
     }
@@ -252,6 +253,26 @@ test("fetches both exact SHAs and records the complete upstream evidence", async
   const audit = JSON.parse(await readFile(result.auditPath, "utf8")) as { nameStatus: string; log: string };
   assert.match(audit.nameStatus, /A\s+new\.md/u);
   assert.match(audit.log, /target/u);
+});
+
+test("records an upstream patch that restores the original file bytes", async () => {
+  const f = await fixture();
+  const result = await runUpstreamMonitor({ command: "start", ownerPid: process.pid }, {
+    cwd: f.linked, execute: f.runner({ observed: f.target })
+  }) as { diffPath: string };
+  const applyRoot = path.join(f.root, "apply-check");
+  await mkdir(applyRoot, { recursive: true });
+  await writeFile(path.join(applyRoot, "skill.md"), "pinned bytes\n");
+  git(applyRoot, "init", "--quiet");
+  git(applyRoot, "config", "core.autocrlf", "false");
+  git(applyRoot, "config", "user.name", "Fixture");
+  git(applyRoot, "config", "user.email", "fixture@example.test");
+  git(applyRoot, "add", "skill.md");
+  git(applyRoot, "commit", "--quiet", "-m", "pinned");
+  execFileSync("git", ["apply", "--check", result.diffPath], { cwd: applyRoot, encoding: "utf8" });
+  execFileSync("git", ["apply", result.diffPath], { cwd: applyRoot, encoding: "utf8" });
+  assert.equal(await readFile(path.join(applyRoot, "skill.md"), "utf8"), "target bytes\n");
+  assert.deepEqual(await readFile(path.join(applyRoot, "new.md")), newFileBytes);
 });
 
 test("fails closed on contention, PR query errors, corrupt locks, and mismatched recovery", async () => {

@@ -188,7 +188,7 @@ export async function loadCatalogFromVendor(
     beta: byBucket["in-progress"].length,
     misc: byBucket.misc.length
   };
-  if (counts.stable !== 27 || counts.beta !== 7 || counts.misc !== 4 || skills.size !== 38) {
+  if (counts.stable !== 27 || counts.beta !== 8 || counts.misc !== 4 || skills.size !== 39) {
     invalid("Unexpected upstream skill counts", counts);
   }
 
