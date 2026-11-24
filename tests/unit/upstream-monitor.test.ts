@@ -295,6 +295,7 @@ test("records an upstream diff that stays appliable", async () => {
   await mkdir(applyRoot, { recursive: true });
   await writeFile(path.join(applyRoot, "skill.md"), "pinned bytes\n");
   git(applyRoot, "init", "--quiet");
+  git(applyRoot, "config", "core.autocrlf", "false");
   git(applyRoot, "config", "user.name", "Fixture");
   git(applyRoot, "config", "user.email", "fixture@example.test");
   git(applyRoot, "add", "skill.md");
